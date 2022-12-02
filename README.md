@@ -1,0 +1,2 @@
+# VoiceCraft-MCBE_ProximityChat_Addon
+Addon for VoiceCraft-MCBE_Proximity_Chat
