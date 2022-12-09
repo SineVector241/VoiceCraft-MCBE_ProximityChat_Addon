@@ -121,8 +121,9 @@ world.events.tick.subscribe((ev) => {
         .setMethod(HttpRequestMethod.POST)
         .setHeaders([new HttpHeader("Content-Type", "application/json")]);
 
-      http.request(request).then().catch(e => {
-        linked = false;
+      http.request(request).then(out => {
+        if(out.status != 202)
+            linked = false;
       });
     }
   } catch {
