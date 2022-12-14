@@ -44,6 +44,7 @@ function SendRequest(player) {
     Type: 2,
     Key: key,
     PlayerId: "",
+    Username: "",
     Players: [],
   };
 
@@ -69,6 +70,7 @@ function SendSessionKeyRequest(player) {
       Type: 0,
       Key: key,
       PlayerId: "",
+      Username: player.name,
       Players: [],
     };
   
@@ -94,6 +96,7 @@ world.events.tick.subscribe((ev) => {
       Type: 1,
       Key: key,
       PlayerId: "",
+      Username: "",
       Players: [],
     };
     if (linked) {
