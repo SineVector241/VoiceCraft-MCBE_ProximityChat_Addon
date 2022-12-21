@@ -26,8 +26,4 @@ world.events.beforeChat.subscribe((ev) => {
 
     ev.cancel = true;
   }
- if(ev.message.startsWith("!test"))
- {
-  ev.cancel = true;
- }
 });
