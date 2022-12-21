@@ -11,7 +11,7 @@ world.events.beforeChat.subscribe((ev) => {
     States.Ip = params[0];
 
     ev.sender.tell("Requested Login");
-    network.Login(ev.Sender);
+    network.Login(ev.sender);
 
     ev.cancel = true;
   }
@@ -26,4 +26,8 @@ world.events.beforeChat.subscribe((ev) => {
 
     ev.cancel = true;
   }
+ if(ev.message.startsWith("!test"))
+ {
+  ev.cancel = true;
+ }
 });

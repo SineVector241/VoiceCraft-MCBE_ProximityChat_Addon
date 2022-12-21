@@ -12,13 +12,7 @@ class Network {
   constructor() {
     this.States = States;
     //2 = Login Request, 1 = Update Player List, 0 = Create Session Key
-    this.Packet = {
-      Type: 0,
-      Key: key,
-      PlayerId: "",
-      Username: "",
-      Players: [],
-    };
+    this.Packet = { Type: 0, Key: "", PlayerId: "", Username: "", Players: [] };
     this.Http = http;
   }
 
@@ -53,6 +47,7 @@ class Network {
     packet.Type = 0;
     packet.Username = player.name;
     packet.Key = this.States.Key;
+    packet.PlayerId = player.id;
 
     //Setup request.
     var request = new HttpRequest(`http://${this.States.Ip}/`)
@@ -99,6 +94,7 @@ Player Packet
 
 var player = {
     PlayerId: "",
+    EnviromentId: "",
     Location: {
         X: 0,
         Y: 0,
