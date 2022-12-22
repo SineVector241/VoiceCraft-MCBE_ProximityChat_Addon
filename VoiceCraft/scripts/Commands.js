@@ -26,4 +26,11 @@ world.events.beforeChat.subscribe((ev) => {
 
     ev.cancel = true;
   }
+
+  if(ev.message.startsWith("!vchelp"))
+  {
+    ev.sender.tell("To get started. Download and open up the VoiceCraft application. Then in minecraft type !vcreq and use the given key, ip and port to connect to the VoiceCraft server using the application.");
+
+    ev.cancel = true;
+  }
 });

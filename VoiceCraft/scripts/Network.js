@@ -59,9 +59,10 @@ class Network {
     //Send request and respond to player.
     this.Http.request(request).then((out) => {
       if (out.status == 200) {
-        player.tell(`§aRequest Accepted. Your key is: ${out.body}`);
+        var addressInfo = this.States.Ip.split(":");
+        player.tell(`§2Request Accepted. Your key is: ${out.body}\n-- VoiceCraft Information --\nIP: ${addressInfo[0]}\nPORT: ${addressInfo[1]}`);
       } else {
-        player.tell("§cConflict detected! Could not create new session key!");
+        player.tell("§cConflict detected! Could not create new session key! Please log off on VoiceCraft or wait 5 minutes before requesting a new session key.");
       }
     });
   }
