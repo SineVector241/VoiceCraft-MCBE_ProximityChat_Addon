@@ -1,105 +1,114 @@
-import {
-  http,
-  HttpRequest,
-  HttpRequestMethod,
-  HttpHeader,
-  HttpResponse,
-} from "@minecraft/server-net";
-
-import { States } from "./States";
+import { HttpRequestMethod, HttpHeader, HttpRequest, http } from '@minecraft/server-net';
+import { world, system, Player } from '@minecraft/server';
 
 class Network {
-  constructor() {
-    this.States = States;
-    //2 = Login Request, 1 = Update Player List, 0 = Create Session Key
-    this.Packet = { Type: 0, Key: "", PlayerId: "", Username: "", Players: [] };
-    this.Http = http;
-  }
+    static IsConnected = false;
+    static IP = "";
+    static Key = "";
+    static Port = 0;
 
-  Login(player) {
-    //Setup Packet
-    var packet = this.Packet;
-    packet.Type = 2;
-    packet.Key = this.States.Key;
+    /**
+     * @argument {string} Ip
+     * @argument {Number} Port
+     * @argument {string} Key 
+     * @argument {Player} PlayerObject
+     */
+    static Connect(Ip, Port, Key, PlayerObject) {
+        this.IP = Ip;
+        this.Port = Port;
+        this.Key = Key;
 
-    //Setup request.
-    var request = new HttpRequest(`http://${this.States.Ip}/`)
-      .setTimeout(5)
-      .setBody(JSON.stringify(packet))
-      .setMethod(HttpRequestMethod.POST)
-      .setHeaders([new HttpHeader("Content-Type", "application/json")]);
+        const packet = new Packet();
+        packet.LoginKey = Key;
+        packet.Type = 0;
 
-    //Send Request and respond to player.
-    this.Http.request(request).then((out) => {
-      if (out.status == 202) {
-        this.States.isConnected = true;
-        player.tell("§aLogin Accepted. Server successfully linked!");
-      } else {
-        this.States.isConnected = false;
-        player.tell("§cLogin Denied. Server denied link request!");
-      }
-    });
-  }
+        const request = new HttpRequest(`http://${this.IP}:${this.Port}/`);
+        request.setTimeout(5);
+        request.setBody(JSON.stringify(packet));
+        request.setMethod(HttpRequestMethod.POST);
+        request.setHeaders([new HttpHeader("Content-Type", "application/json")]);
+        http.request(request).then(response => {
+            if (response.status == 200) {
+                this.IsConnected = true;
+                PlayerObject.sendMessage("§aLogin Accepted. Server successfully linked!");
+            } else if(response.status == 3) {
+                this.IsConnected = false;
+                PlayerObject.sendMessage("§cCould not contact server. Please check if your IP and PORT are correct!");
+            } else {
+                this.IsConnected = false;
+                PlayerObject.sendMessage("§cLogin Denied. Server denied link request!");
+            }
+        });
+    }
 
-  SendSessionKeyRequest(player) {
-    //Setup Packet
-    var packet = this.Packet;
-    packet.Type = 0;
-    packet.Username = player.name;
-    packet.Key = this.States.Key;
-    packet.PlayerId = player.id;
+    /**
+     * @argument {string} Key
+     * @argument {Player} PlayerObject
+     */
+    static RequestBinding(Key, PlayerObject) {
+        if (!Network.IsConnected) {
+            PlayerObject.sendMessage("§cCould not request session key. Server not linked!");
+            return;
+        }
 
-    //Setup request.
-    var request = new HttpRequest(`http://${this.States.Ip}/`)
-      .setTimeout(5)
-      .setBody(JSON.stringify(packet))
-      .setMethod(HttpRequestMethod.POST)
-      .setHeaders([new HttpHeader("Content-Type", "application/json")]);
+        const packet = new Packet();
+        packet.LoginKey = this.Key;
+        packet.Type = 1;
+        packet.Gamertag = PlayerObject.name;
+        packet.PlayerKey = Key;
+        packet.PlayerId = PlayerObject.id;
 
-    //Send request and respond to player.
-    this.Http.request(request).then((out) => {
-      if (out.status == 200) {
-        var addressInfo = this.States.Ip.split(":");
-        player.tell(`§2Request Accepted. Your key is: ${out.body}\n-- VoiceCraft Information --\nIP: ${addressInfo[0]}\nPORT: ${addressInfo[1]}`);
-      } else {
-        player.tell("§cConflict detected! Could not create new session key! Please log off on VoiceCraft or wait 5 minutes before requesting a new session key.");
-      }
-    });
-  }
+        PlayerObject.sendMessage(JSON.stringify(packet));
 
-  SendUpdatePacket(Players) {
-    //Setup the packet;
-    var packet = this.Packet;
-    packet.Type = 1;
-    packet.Players = Players;
-    packet.Key = this.States.Key;
-
-    //Setup request.
-    var request = new HttpRequest(`http://${this.States.Ip}/`)
-      .setTimeout(5)
-      .setBody(JSON.stringify(packet))
-      .setMethod(HttpRequestMethod.POST)
-      .setHeaders([new HttpHeader("Content-Type", "application/json")]);
-
-    //Send request.
-    http.request(request).then((out) => {
-      if (out.status != 202) this.States.isConnected = false;
-    });
-  }
+        const request = new HttpRequest(`http://${this.IP}:${this.Port}/`);
+        request.setTimeout(5);
+        request.setBody(JSON.stringify(packet));
+        request.setMethod(HttpRequestMethod.POST);
+        request.setHeaders([new HttpHeader("Content-Type", "application/json")]);
+        http.request(request).then(response => {
+            if (response.status == 202) {
+                PlayerObject.sendMessage("§2Binded successfully!");
+            }
+            else {
+                PlayerObject.sendMessage("§cBinding Unsuccessfull. Could not find binding key, key has already been binded to a participant or you are already binded!");
+            }
+        });
+    }
 }
 
-export { Network };
+class Packet {
+    constructor() {
+        this.Type = 0;
+        this.LoginKey = "";
+        this.PlayerId = "";
+        this.PlayerKey = "";
+        this.Gamertag = "";
+        this.Players = [];
+    }
+}
 
-/*
-Player Packet
 
-var player = {
-    PlayerId: "",
-    EnviromentId: "",
-    Location: {
-        X: 0,
-        Y: 0,
-        Z: 0,
-      },
-};
-*/
+system.runInterval(() => {
+    if (Network.IsConnected) {
+        const playerList = world.getAllPlayers().map(plr => ({ PlayerId: plr.id, DimensionId: plr.dimension.id, Location: { x: plr.getHeadLocation().x, y: plr.getHeadLocation().y, z: plr.getHeadLocation().z } }));
+        const packet = new Packet();
+        packet.LoginKey = Network.Key;
+        packet.Type = 2;
+        packet.Players = playerList;
+
+        const request = new HttpRequest(`http://${Network.IP}:${Network.Port}/`);
+        request.setTimeout(5);
+        request.setBody(JSON.stringify(packet));
+        request.setMethod(HttpRequestMethod.POST);
+        request.setHeaders([new HttpHeader("Content-Type", "application/json")]);
+
+        http.request(request).then(response => {
+            if (response.status != 200) {
+                Network.IsConnected = false;
+                http.cancelAll("Lost Connection From VOIP Server");
+            }
+        });
+    }
+});
+
+export { Network }

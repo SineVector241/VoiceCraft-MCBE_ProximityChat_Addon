@@ -1,13 +1,17 @@
-import "./Commands";
-import { Network } from "./Network";
-import { States } from "./States";
-import { world } from "@minecraft/server";
+import { CommandSystem } from './Commands/CommandSystem';
+import { Network } from './Network';
 
-var network = new Network();
+CommandSystem.RegisterCommand("connect", function(params) {
+    Network.Connect(params.IP, params.PORT, params.Key, params.source);
+}, {
+    IP: "string",
+    PORT: "integer",
+    Key: "string"
+});
 
-world.events.tick.subscribe((ev) => {
-  if (States.isConnected) {
-    const playerList = world.getAllPlayers().map(plr => ({ PlayerId: plr.id, EnviromentId: plr.dimension.id, Location: { X: plr.headLocation.x, Y: plr.headLocation.y, Z: plr.headLocation.z } }));
-    network.SendUpdatePacket(playerList);
-  }
+CommandSystem.RegisterCommand("bind", function(params) {
+    params.source.sendMessage("§eBinding...");
+    Network.RequestBinding(params.Key, params.source);
+}, {
+    Key: "string"
 });

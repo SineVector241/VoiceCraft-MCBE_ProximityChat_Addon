@@ -6,7 +6,7 @@
 		],
 		"generated_with": {
 			"bridge": [
-				"2.4.2"
+				"2.6.0"
 			],
 			"dash": [
 				"0.10.8"
@@ -19,9 +19,9 @@
 		"min_engine_version": [
 			1,
 			19,
-			40
+			50
 		],
-		"uuid": "d9fe316a-a439-48f6-8759-800e04883947",
+		"uuid": "87b49038-e613-4216-b265-6101b83376e2",
 		"version": [
 			1,
 			0,
@@ -31,7 +31,7 @@
 	"modules": [
 		{
 			"type": "data",
-			"uuid": "6753962a-a0a0-40f8-8b52-4a02ae9d2ce1",
+			"uuid": "498ee7de-dc5e-4425-b730-c6795ede85ba",
 			"version": [
 				1,
 				0,
@@ -41,7 +41,7 @@
 		{
 			"type": "script",
 			"language": "javascript",
-			"uuid": "bd673305-16eb-444f-b7c4-3b6e23401e38",
+			"uuid": "3d2b2b53-76da-4301-819e-dd4f4ab60505",
 			"entry": "scripts/main.js",
 			"version": [
 				1,
@@ -54,18 +54,6 @@
 		{
 			"module_name": "@minecraft/server",
 			"version": "1.1.0-beta"
-		},
-		{
-			"module_name": "@minecraft/server-gametest",
-			"version": "1.0.0-beta"
-		},
-		{
-			"module_name": "@minecraft/server-ui",
-			"version": "1.0.0-beta"
-		},
-		{
-			"module_name": "@minecraft/server-admin",
-			"version": "1.0.0-beta"
 		},
 		{
 			"module_name": "@minecraft/server-net",
