@@ -58,8 +58,6 @@ class Network {
         packet.PlayerKey = Key;
         packet.PlayerId = PlayerObject.id;
 
-        PlayerObject.sendMessage(JSON.stringify(packet));
-
         const request = new HttpRequest(`http://${this.IP}:${this.Port}/`);
         request.setTimeout(5);
         request.setBody(JSON.stringify(packet));
