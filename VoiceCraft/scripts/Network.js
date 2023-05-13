@@ -88,7 +88,7 @@ class Packet {
 
 system.runInterval(() => {
     if (Network.IsConnected) {
-        const playerList = world.getAllPlayers().map(plr => ({ PlayerId: plr.id, DimensionId: plr.dimension.id, Location: { x: plr.getHeadLocation().x, y: plr.getHeadLocation().y, z: plr.getHeadLocation().z } }));
+        const playerList = world.getAllPlayers().map(plr => ({ PlayerId: plr.id, DimensionId: plr.dimension.id, Location: { x: plr.getHeadLocation().x, y: plr.getHeadLocation().y, z: plr.getHeadLocation().z }, Rotation: plr.getRotation().y }));
         const packet = new Packet();
         packet.LoginKey = Network.Key;
         packet.Type = 2;
