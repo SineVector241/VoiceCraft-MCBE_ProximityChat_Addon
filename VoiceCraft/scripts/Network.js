@@ -131,7 +131,7 @@ class Network {
 
                 new ModalFormData()
                     .title("VoiceCraft Server Settings")
-                    .slider("Proximity Distance", 1, 80, 1, settings.ProximityDistance)
+                    .slider("Proximity Distance", 1, 60, 1, settings.ProximityDistance)
                     .toggle("Proximity Enabled", settings.ProximityToggle)
                     .toggle("Voice Effects (Coming Soon!)")
                     .show(PlayerObject)

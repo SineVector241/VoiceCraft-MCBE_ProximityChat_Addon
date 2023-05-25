@@ -1,6 +1,13 @@
 import { CommandSystem } from "./Commands/CommandSystem";
 import { Network } from "./Network";
-import { EntityInventoryComponent, ItemStack, world } from "@minecraft/server";
+import {
+  EntityInventoryComponent,
+  ItemStack,
+  world,
+  system,
+  DynamicPropertiesDefinition,
+} from "@minecraft/server";
+import { GUIHandler } from "./GUIHandler";
 
 CommandSystem.RegisterCommand(
   "connect",
@@ -46,12 +53,48 @@ CommandSystem.RegisterCommand(
   }
 );
 
+CommandSystem.RegisterCommand(
+  "autoconnect",
+  function (params) {
+    const IP = world.getDynamicProperty("autoConnectIP");
+    const Port = world.getDynamicProperty("autoConnectPort");
+    const ServerKey = world.getDynamicProperty("autoConnectServerKey");
+    if (isEmptyOrSpaces(IP) || isEmptyOrSpaces(ServerKey) || Port === null) {
+      params.source.sendMessage(
+        "§cError. Cannot connect. AutoBind settings may not be setup properly!"
+      );
+      return;
+    }
+
+    Network.Connect(IP, Port, ServerKey, params.source);
+  },
+  {}
+);
+
 world.events.beforeItemUse.subscribe((ev) => {
   try {
     if (ev.item.getLore()[0] == "Open VoiceCraft Settings") {
-      Network.ShowSettings(ev.source);
+      GUIHandler.ShowUI(GUIHandler.UIScreens.MainPage, ev.source);
     }
   } catch (ex) {
     ev.source.sendMessage(ex.toString());
   }
 });
+
+world.events.worldInitialize.subscribe((ev) => {
+  try {
+    const dynamicProperties = new DynamicPropertiesDefinition();
+    dynamicProperties.defineString("autoConnectIP", 15);
+    dynamicProperties.defineNumber("autoConnectPort");
+    dynamicProperties.defineString("autoConnectServerKey", 36);
+    ev.propertyRegistry.registerWorldDynamicProperties(dynamicProperties);
+  } catch (ex) {
+    world.getAllPlayers()[0].sendMessage(ex.toString());
+  }
+});
+
+system.events.beforeWatchdogTerminate.subscribe((data) => (data.cancel = true));
+
+function isEmptyOrSpaces(str) {
+  return str === null || str.match(/^ *$/) !== null;
+}
