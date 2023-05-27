@@ -60,7 +60,7 @@ class GUIHandler {
         new ModalFormData()
           .title("Auto Connect Settings")
           .textField("IP Address", "127.0.0.1", IP)
-          .textField("Port", "9050", Port.toString())
+          .textField("Port", "9050", Port ? Port.toString() : "")
           .textField("Server Key", "abc123", ServerKey)
           .show(player)
           .then((results) => {
