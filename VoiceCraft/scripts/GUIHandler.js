@@ -38,7 +38,7 @@ class GUIHandler {
               const ServerKey = world.getDynamicProperty("autoConnectServerKey");
               if (isEmptyOrSpaces(IP) || isEmptyOrSpaces(ServerKey) || Port === null) {
                 player.sendMessage(
-                  "§cError. Cannot connect. AutoBind settings may not be setup properly!"
+                  "§cError. Cannot connect. AutoConnect settings may not be setup properly!"
                 );
                 return;
               }
@@ -78,7 +78,7 @@ class GUIHandler {
               portNum > 65535
             ) {
               player.sendMessage(
-                "§cError. IP or Key cannot be empty! Port Number also has to be between 1025 to 65535"
+                "§cError. IP or Key cannot be empty! Port Number must also be between 1025 to 65535"
               );
               return;
             }
@@ -89,7 +89,7 @@ class GUIHandler {
               world.setDynamicProperty("autoConnectServerKey", Key);
 
               player.sendMessage(
-                "§2Successfully set auto bind command settings!"
+                "§2Successfully set auto connect command settings!"
               );
             } catch (ex) {
               player.sendMessage(ex.toString());

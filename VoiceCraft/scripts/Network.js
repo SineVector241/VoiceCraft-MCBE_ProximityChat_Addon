@@ -15,6 +15,8 @@ class Network {
      * @argument {Player} PlayerObject
      */
     static Connect(Ip, Port, Key, PlayerObject) {
+        PlayerObject.sendMessage("§eConnecting/Linking Server...");
+
         this.IP = Ip;
         this.Port = Port;
         this.Key = Key;

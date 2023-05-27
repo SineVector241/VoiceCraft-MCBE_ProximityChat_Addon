@@ -4,7 +4,6 @@ import {
   EntityInventoryComponent,
   ItemStack,
   world,
-  system,
   DynamicPropertiesDefinition,
 } from "@minecraft/server";
 import { GUIHandler } from "./GUIHandler";
@@ -71,6 +70,19 @@ CommandSystem.RegisterCommand(
   {}
 );
 
+CommandSystem.RegisterCommand(
+  "help",
+  function(params) {
+    params.source.sendMessage("§bVoiceCraft Commands\n" + 
+    "§g- connect [IP: string] [Port: integer] [Key: string] -> §bAttempts connection to a voicecraft server.\n" +
+    "§g- settings -> §bGives you an item to access voicecraft settings panel/gui.\n" + 
+    "§g- bind [Key: string] -> §bBinds the client running the command to a client connected to the voicecraft server.\n" + 
+    "§g- autoconnect -> §bTakes the settings from the autoconnect settings and attempts connection.\n" + 
+    "§g- help -> §bHelp command.");
+  },
+  {}
+)
+
 world.events.beforeItemUse.subscribe((ev) => {
   try {
     if (ev.item.getLore()[0] == "Open VoiceCraft Settings") {
@@ -82,18 +94,12 @@ world.events.beforeItemUse.subscribe((ev) => {
 });
 
 world.events.worldInitialize.subscribe((ev) => {
-  try {
-    const dynamicProperties = new DynamicPropertiesDefinition();
-    dynamicProperties.defineString("autoConnectIP", 15);
-    dynamicProperties.defineNumber("autoConnectPort");
-    dynamicProperties.defineString("autoConnectServerKey", 36);
-    ev.propertyRegistry.registerWorldDynamicProperties(dynamicProperties);
-  } catch (ex) {
-    world.getAllPlayers()[0].sendMessage(ex.toString());
-  }
+  const dynamicProperties = new DynamicPropertiesDefinition();
+  dynamicProperties.defineString("autoConnectIP", 15);
+  dynamicProperties.defineNumber("autoConnectPort");
+  dynamicProperties.defineString("autoConnectServerKey", 36);
+  ev.propertyRegistry.registerWorldDynamicProperties(dynamicProperties);
 });
-
-system.events.beforeWatchdogTerminate.subscribe((data) => (data.cancel = true));
 
 function isEmptyOrSpaces(str) {
   return str === null || str.match(/^ *$/) !== null;
