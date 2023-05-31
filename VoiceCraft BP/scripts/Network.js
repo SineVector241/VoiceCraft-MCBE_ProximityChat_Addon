@@ -8,6 +8,10 @@ class Network {
     static Key = "";
     static Port = 0;
 
+    //External Server Settings
+    static ProximityDistance = 0;
+    static ProximityEnabled = true;
+
     /**
      * @argument {string} Ip
      * @argument {Number} Port
@@ -67,6 +71,8 @@ class Network {
         http.request(request).then(response => {
             if (response.status == 202) {
                 PlayerObject.sendMessage("§2Binded successfully!");
+                if(world.getDynamicProperty("sendBindedMessage"))
+                    world.sendMessage(`§b${PlayerObject.name} §2has connected to VoiceCraft!`);
             }
             else {
                 PlayerObject.sendMessage("§cBinding Unsuccessfull. Could not find binding key, key has already been binded to a participant or you are already binded!");
@@ -98,7 +104,7 @@ class Network {
         request.setHeaders([new HttpHeader("Content-Type", "application/json")]);
         http.request(request).then(response => {
             if (response.status == 200) {
-                PlayerObject.sendMessage("§2Updated Settings Successfully!");
+                PlayerObject.sendMessage("§2Successfully set internal server settings!");
             }
             else {
                 PlayerObject.sendMessage("§cAn error occured! Could not update settings!");
@@ -132,7 +138,7 @@ class Network {
                 settings.ProximityToggle = json.Settings.ProximityToggle;
 
                 new ModalFormData()
-                    .title("VoiceCraft Server Settings")
+                    .title("External Server Settings")
                     .slider("Proximity Distance", 1, 60, 1, settings.ProximityDistance)
                     .toggle("Proximity Enabled", settings.ProximityToggle)
                     .toggle("Voice Effects (Coming Soon!)")
@@ -219,6 +225,39 @@ system.runInterval(() => {
             }
         });
     }
+    if(world.getDynamicProperty("serverSettingsHudDisplay"))
+        world.getDimension("minecraft:overworld")
+        .runCommandAsync(`title @a actionbar §bServer Connection: ${Network.IsConnected? "§aConnected" : "§cDisconnected"}`+
+        `\n§bVoice Proximity: ${Network.ProximityEnabled? "§2Enabled" : "§cDisabled"}`+
+        `\n§bVoice Proximity Distance: §e${Network.ProximityDistance}`+
+        `\n\n§bText Proximity: ${world.getDynamicProperty("textProximityChat")? "§2Enabled" : "§cDisabled"}`+
+        `\n§bText Proximity Distance: §e${world.getDynamicProperty("textProximityDistance")}`+
+        `${world.getDynamicProperty("displayServerAddressOnHud")? `\n\n§bServer Address: ${Network.IP}:${Network.Port}`: ""}`);
 });
+
+system.runInterval(() => {
+    if(Network.IsConnected)
+    {
+        const packet = new GetSettingsPacket();
+        packet.LoginKey = Network.Key;
+
+        const request = new HttpRequest(`http://${Network.IP}:${Network.Port}/`);
+        request.setTimeout(5);
+        request.setBody(JSON.stringify(packet));
+        request.setMethod(HttpRequestMethod.POST);
+        request.setHeaders([new HttpHeader("Content-Type", "application/json")]);
+        http.request(request).then(response => {
+            if (response.status == 200) {
+                const json = JSON.parse(response.body);
+                const settings = new ServerSettings();
+                settings.ProximityDistance = json.Settings.ProximityDistance;
+                settings.ProximityToggle = json.Settings.ProximityToggle;
+
+                Network.ProximityDistance = settings.ProximityDistance;
+                Network.ProximityEnabled = settings.ProximityToggle;
+            }
+        });
+    }
+}, 20*5)
 
 export { Network }

@@ -5,6 +5,7 @@ import {
   ItemStack,
   world,
   DynamicPropertiesDefinition,
+  Vector
 } from "@minecraft/server";
 import { GUIHandler } from "./GUIHandler";
 
@@ -93,11 +94,23 @@ world.events.beforeItemUse.subscribe((ev) => {
   }
 });
 
+world.events.beforeChat.subscribe(ev => {
+  if(world.getDynamicProperty("textProximityChat"))
+  {
+    ev.setTargets(world.getAllPlayers().filter(x => new Vector(0,0,0).distance(x.location, ev.source.location) <= world.getDynamicProperty(textProximityDistance) && x.dimension.id === ev.source.dimension.id));
+  }
+});
+
 world.events.worldInitialize.subscribe((ev) => {
   const dynamicProperties = new DynamicPropertiesDefinition();
   dynamicProperties.defineString("autoConnectIP", 15);
   dynamicProperties.defineNumber("autoConnectPort");
   dynamicProperties.defineString("autoConnectServerKey", 36);
+  dynamicProperties.defineNumber("textProximityDistance");
+  dynamicProperties.defineBoolean("sendBindedMessage");
+  dynamicProperties.defineBoolean("textProximityChat");
+  dynamicProperties.defineBoolean("serverSettingsHudDisplay");
+  dynamicProperties.defineBoolean("displayServerAddressOnHud");
   ev.propertyRegistry.registerWorldDynamicProperties(dynamicProperties);
 });
 
