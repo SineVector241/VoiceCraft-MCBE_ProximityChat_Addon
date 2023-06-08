@@ -4,6 +4,7 @@ import {
   EntityInventoryComponent,
   ItemStack,
   world,
+  system,
   DynamicPropertiesDefinition,
   Vector
 } from "@minecraft/server";
@@ -84,24 +85,28 @@ CommandSystem.RegisterCommand(
   {}
 )
 
-world.events.beforeItemUse.subscribe((ev) => {
-  try {
-    if (ev.item.getLore()[0] == "Open VoiceCraft Settings") {
-      GUIHandler.ShowUI(GUIHandler.UIScreens.MainPage, ev.source);
+world.beforeEvents.itemUse.subscribe((ev) => {
+  const player = ev.source;
+  const item = ev.itemStack;
+  system.run(() => {
+    try {
+      if (item.getLore()[0] == "Open VoiceCraft Settings") {
+        GUIHandler.ShowUI(GUIHandler.UIScreens.MainPage, player);
+      }
+    } catch (ex) {
+      player.sendMessage(ex.toString());
     }
-  } catch (ex) {
-    ev.source.sendMessage(ex.toString());
-  }
+  })
 });
 
-world.events.beforeChat.subscribe(ev => {
+world.beforeEvents.chatSend.subscribe(ev => {
   if(world.getDynamicProperty("textProximityChat"))
   {
-    ev.setTargets(world.getAllPlayers().filter(x => new Vector(0,0,0).distance(x.location, ev.source.location) <= world.getDynamicProperty(textProximityDistance) && x.dimension.id === ev.source.dimension.id));
+    ev.setTargets(world.getAllPlayers().filter(x => x.dimension.id === ev.sender.dimension.id && Vector.distance(x.location, ev.sender.location) <= world.getDynamicProperty("textProximityDistance")));
   }
 });
 
-world.events.worldInitialize.subscribe((ev) => {
+world.afterEvents.worldInitialize.subscribe((ev) => {
   const dynamicProperties = new DynamicPropertiesDefinition();
   dynamicProperties.defineString("autoConnectIP", 15);
   dynamicProperties.defineNumber("autoConnectPort");
