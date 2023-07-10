@@ -50,7 +50,7 @@ CommandSystem.RegisterCommand(
     Network.RequestBinding(params.Key, params.source);
   },
   {
-    Key: "string",
+    Key: "integer",
   }
 );
 

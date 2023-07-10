@@ -189,7 +189,7 @@ class BindingPacket {
     this.Type = 1;
     this.LoginKey = "";
     this.PlayerId = "";
-    this.PlayerKey = "";
+    this.PlayerKey = 0;
     this.Gamertag = "";
   }
 }
