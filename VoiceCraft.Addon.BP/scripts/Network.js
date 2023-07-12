@@ -36,7 +36,7 @@ class Network {
     const request = new HttpRequest(`http://${this.IP}:${this.Port}/`);
     request.setTimeout(5);
     request.setBody(JSON.stringify(packet));
-    request.setMethod(HttpRequestMethod.POST);
+    request.setMethod(HttpRequestMethod.Post);
     request.setHeaders([new HttpHeader("Content-Type", "application/json")]);
     http.request(request).then((response) => {
       if (response.status == 200) {
@@ -77,7 +77,7 @@ class Network {
     const request = new HttpRequest(`http://${this.IP}:${this.Port}/`);
     request.setTimeout(5);
     request.setBody(JSON.stringify(packet));
-    request.setMethod(HttpRequestMethod.POST);
+    request.setMethod(HttpRequestMethod.Post);
     request.setHeaders([new HttpHeader("Content-Type", "application/json")]);
     http.request(request).then((response) => {
       if (response.status == 202) {
@@ -115,7 +115,7 @@ class Network {
     const request = new HttpRequest(`http://${this.IP}:${this.Port}/`);
     request.setTimeout(5);
     request.setBody(JSON.stringify(packet));
-    request.setMethod(HttpRequestMethod.POST);
+    request.setMethod(HttpRequestMethod.Post);
     request.setHeaders([new HttpHeader("Content-Type", "application/json")]);
     http.request(request).then((response) => {
       if (response.status == 200) {
@@ -147,7 +147,7 @@ class Network {
     const request = new HttpRequest(`http://${this.IP}:${this.Port}/`);
     request.setTimeout(5);
     request.setBody(JSON.stringify(packet));
-    request.setMethod(HttpRequestMethod.POST);
+    request.setMethod(HttpRequestMethod.Post);
     request.setHeaders([new HttpHeader("Content-Type", "application/json")]);
     http.request(request).then((response) => {
       if (response.status == 200) {
@@ -245,7 +245,7 @@ system.runInterval(() => {
     const request = new HttpRequest(`http://${Network.IP}:${Network.Port}/`);
     request.setTimeout(5);
     request.setBody(JSON.stringify(packet));
-    request.setMethod(HttpRequestMethod.POST);
+    request.setMethod(HttpRequestMethod.Post);
     request.setHeaders([new HttpHeader("Content-Type", "application/json")]);
 
     http.request(request).then((response) => {
@@ -292,7 +292,7 @@ system.runInterval(() => {
     const request = new HttpRequest(`http://${Network.IP}:${Network.Port}/`);
     request.setTimeout(5);
     request.setBody(JSON.stringify(packet));
-    request.setMethod(HttpRequestMethod.POST);
+    request.setMethod(HttpRequestMethod.Post);
     request.setHeaders([new HttpHeader("Content-Type", "application/json")]);
     http.request(request).then((response) => {
       if (response.status == 200) {
