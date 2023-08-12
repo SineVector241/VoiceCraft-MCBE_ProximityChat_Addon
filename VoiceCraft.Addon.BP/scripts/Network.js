@@ -120,7 +120,7 @@ class Network {
     http.request(request).then((response) => {
       if (response.status == 200) {
         PlayerObject.sendMessage(
-          "§2Successfully set internal server settings!"
+          "§2Successfully set external server settings!"
         );
       } else {
         PlayerObject.sendMessage(
@@ -160,14 +160,15 @@ class Network {
           .title("External Server Settings")
           .slider("Proximity Distance", 1, 60, 1, settings.ProximityDistance)
           .toggle("Proximity Enabled", settings.ProximityToggle)
-          .toggle("Voice Effects (Coming Soon!)")
+          .toggle("Voice Effects", settings.VoiceEffects)
           .show(PlayerObject)
           .then((response) => {
             if (response.canceled) return;
             this.UpdateSettings(
               PlayerObject,
               response.formValues[0],
-              response.formValues[1]
+              response.formValues[1],
+              response.formValues[2]
             );
           });
       } else {
@@ -221,6 +222,7 @@ class ServerSettings {
   constructor() {
     this.ProximityDistance = 30;
     this.ProximityToggle = true;
+    this.VoiceEffects = true;
   }
 }
 
@@ -237,6 +239,7 @@ system.runInterval(() => {
           z: plr.getHeadLocation().z,
         },
         Rotation: plr.getRotation().y,
+        CaveDensity: 0.0
       }));
     const packet = new UpdatePlayersPacket();
     packet.LoginKey = Network.Key;
