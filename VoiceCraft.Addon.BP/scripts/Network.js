@@ -98,8 +98,9 @@ class Network {
    * @argument {Player} PlayerObject
    * @argument {number} ProximityDistance
    * @argument {boolean} ProximityToggle
+   * @argument {boolean} VoiceEffects
    */
-  static UpdateSettings(PlayerObject, ProximityDistance, ProximityToggle) {
+  static UpdateSettings(PlayerObject, ProximityDistance, ProximityToggle, VoiceEffects) {
     if (!Network.IsConnected) {
       PlayerObject.sendMessage(
         "§cCould not request settings update. Server not linked!"
@@ -111,6 +112,7 @@ class Network {
     packet.LoginKey = this.Key;
     packet.Settings.ProximityDistance = ProximityDistance;
     packet.Settings.ProximityToggle = ProximityToggle;
+    packet.Settings.VoiceEffects = VoiceEffects;
 
     const request = new HttpRequest(`http://${this.IP}:${this.Port}/`);
     request.setTimeout(5);
@@ -155,6 +157,7 @@ class Network {
         const settings = new ServerSettings();
         settings.ProximityDistance = json.Settings.ProximityDistance;
         settings.ProximityToggle = json.Settings.ProximityToggle;
+        settings.VoiceEffects = json.Settings.VoiceEffects;
 
         new ModalFormData()
           .title("External Server Settings")
