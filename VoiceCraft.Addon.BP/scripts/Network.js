@@ -4,7 +4,7 @@ import {
   HttpRequest,
   http,
 } from "@minecraft/server-net";
-import { world, system, Player } from "@minecraft/server";
+import { world, system, Player, Vector } from "@minecraft/server";
 import { ModalFormData } from "@minecraft/server-ui";
 
 class Network {
@@ -50,8 +50,8 @@ class Network {
       } else {
         this.IsConnected = false;
         PlayerObject.sendMessage(
-            "§cCould not contact server. Please check if your IP and PORT are correct!"
-          );
+          "§cCould not contact server. Please check if your IP and PORT are correct!"
+        );
       }
     });
   }
@@ -229,6 +229,26 @@ class ServerSettings {
   }
 }
 
+/**
+ * @argument {Player} player
+ */
+function GetCaveDensity(player) {
+  const caveBlocks = ["minecraft:stone",
+  "minecraft:diorite",
+  "minecraft:granite",
+  "minecraft:deepslate",
+  "minecraft:tuff"]
+
+  const dimension = world.getDimension("overworld");
+  const block1 = caveBlocks.includes(dimension.getBlockFromRay(player.getHeadLocation(), Vector.up, { maxDistance: 50 })?.block.type.id) ? 1 : 0;
+  const block2 = caveBlocks.includes(dimension.getBlockFromRay(player.getHeadLocation(), Vector.left, { maxDistance: 20 })?.block.type.id) ? 1 : 0;
+  const block3 = caveBlocks.includes(dimension.getBlockFromRay(player.getHeadLocation(), Vector.right, { maxDistance: 20 })?.block.type.id) ? 1 : 0;
+  const block4 = caveBlocks.includes(dimension.getBlockFromRay(player.getHeadLocation(), Vector.forward, { maxDistance: 20 })?.block.type.id) ? 1 : 0;
+  const block5 = caveBlocks.includes(dimension.getBlockFromRay(player.getHeadLocation(), Vector.back, { maxDistance: 20 })?.block.type.id) ? 1 : 0;
+  const block6 = caveBlocks.includes(dimension.getBlockFromRay(player.getHeadLocation(), Vector.down, { maxDistance: 50 })?.block.type.id) ? 1 : 0;
+  return (block1 + block2 + block3 + block4 + block5 + block6) / 6;
+}
+
 system.runInterval(() => {
   if (Network.IsConnected) {
     const playerList = world
@@ -242,7 +262,7 @@ system.runInterval(() => {
           z: plr.getHeadLocation().z,
         },
         Rotation: plr.getRotation().y,
-        CaveDensity: 0.0
+        CaveDensity: plr.dimension.id == "minecraft:overworld" ? GetCaveDensity(plr) : 0.0
       }));
     const packet = new UpdatePlayersPacket();
     packet.LoginKey = Network.Key;
@@ -266,28 +286,24 @@ system.runInterval(() => {
       world
         .getDimension("minecraft:overworld")
         .runCommandAsync(
-          `title @a actionbar §bServer Connection: ${
-            Network.IsConnected ? "§aConnected" : "§cDisconnected"
+          `title @a actionbar §bServer Connection: ${Network.IsConnected ? "§aConnected" : "§cDisconnected"
           }` +
-            `\n§bVoice Proximity: ${
-              Network.ProximityEnabled ? "§2Enabled" : "§cDisabled"
-            }` +
-            `\n§bVoice Proximity Distance: §e${Network.ProximityDistance}` +
-            `\n\n§bText Proximity: ${
-              world.getDynamicProperty("textProximityChat")
-                ? "§2Enabled"
-                : "§cDisabled"
-            }` +
-            `\n§bText Proximity Distance: §e${world.getDynamicProperty(
-              "textProximityDistance"
-            )}` +
-            `${
-              world.getDynamicProperty("displayServerAddressOnHud")
-                ? `\n\n§bServer Address: ${Network.IP}:${Network.Port}`
-                : ""
-            }`
+          `\n§bVoice Proximity: ${Network.ProximityEnabled ? "§2Enabled" : "§cDisabled"
+          }` +
+          `\n§bVoice Proximity Distance: §e${Network.ProximityDistance}` +
+          `\n\n§bText Proximity: ${world.getDynamicProperty("textProximityChat")
+            ? "§2Enabled"
+            : "§cDisabled"
+          }` +
+          `\n§bText Proximity Distance: §e${world.getDynamicProperty(
+            "textProximityDistance"
+          )}` +
+          `${world.getDynamicProperty("displayServerAddressOnHud")
+            ? `\n\n§bServer Address: ${Network.IP}:${Network.Port}`
+            : ""
+          }`
         );
-  } catch {}
+  } catch { }
 });
 
 system.runInterval(() => {
