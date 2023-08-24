@@ -237,7 +237,7 @@ class ServerSettings {
  * @argument {Player} player
  */
 function GetCaveDensity(player) {
-  if(Network.VoiceEffectEnabled && Network.IsConnected) return 0.0;
+  if(!Network.VoiceEffectEnabled && Network.IsConnected) return 0.0;
   const caveBlocks = ["minecraft:stone",
     "minecraft:diorite",
     "minecraft:granite",
