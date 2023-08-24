@@ -16,6 +16,10 @@ class Network {
   //External Server Settings
   static ProximityDistance = 0;
   static ProximityEnabled = true;
+  static VoiceEffectEnabled = true;
+
+  //Dead player detector
+  static DeadPlayers = [];
 
   /**
    * @argument {string} Ip
@@ -233,11 +237,12 @@ class ServerSettings {
  * @argument {Player} player
  */
 function GetCaveDensity(player) {
+  if(Network.VoiceEffectEnabled && Network.IsConnected) return 0.0;
   const caveBlocks = ["minecraft:stone",
-  "minecraft:diorite",
-  "minecraft:granite",
-  "minecraft:deepslate",
-  "minecraft:tuff"]
+    "minecraft:diorite",
+    "minecraft:granite",
+    "minecraft:deepslate",
+    "minecraft:tuff"]
 
   const dimension = world.getDimension("overworld");
   const block1 = caveBlocks.includes(dimension.getBlockFromRay(player.getHeadLocation(), Vector.up, { maxDistance: 50 })?.block.type.id) ? 1 : 0;
@@ -262,7 +267,8 @@ system.runInterval(() => {
           z: plr.getHeadLocation().z,
         },
         Rotation: plr.getRotation().y,
-        CaveDensity: plr.dimension.id == "minecraft:overworld" ? GetCaveDensity(plr) : 0.0
+        CaveDensity: plr.dimension.id == "minecraft:overworld" ? GetCaveDensity(plr) : 0.0,
+        IsDead: Network.DeadPlayers.includes(plr.id)
       }));
     const packet = new UpdatePlayersPacket();
     packet.LoginKey = Network.Key;
@@ -289,6 +295,8 @@ system.runInterval(() => {
           `title @a actionbar §bServer Connection: ${Network.IsConnected ? "§aConnected" : "§cDisconnected"
           }` +
           `\n§bVoice Proximity: ${Network.ProximityEnabled ? "§2Enabled" : "§cDisabled"
+          }` +
+          `\n§bVoice Effects: ${Network.VoiceEffectEnabled ? "§2Enabled" : "§cDisabled"
           }` +
           `\n§bVoice Proximity Distance: §e${Network.ProximityDistance}` +
           `\n\n§bText Proximity: ${world.getDynamicProperty("textProximityChat")
@@ -322,9 +330,11 @@ system.runInterval(() => {
         const settings = new ServerSettings();
         settings.ProximityDistance = json.Settings.ProximityDistance;
         settings.ProximityToggle = json.Settings.ProximityToggle;
+        settings.VoiceEffects = json.Settings.VoiceEffects;
 
         Network.ProximityDistance = settings.ProximityDistance;
         Network.ProximityEnabled = settings.ProximityToggle;
+        Network.VoiceEffectEnabled = settings.VoiceEffects;
       }
     });
   }

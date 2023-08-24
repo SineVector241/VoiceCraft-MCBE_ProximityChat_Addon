@@ -106,6 +106,23 @@ world.beforeEvents.chatSend.subscribe(ev => {
   }
 });
 
+world.afterEvents.entityDie.subscribe(ev => {
+  if(ev.deadEntity.typeId == "minecraft:player")
+  {
+    Network.DeadPlayers.push(ev.deadEntity.id);
+  }
+});
+
+world.afterEvents.playerSpawn.subscribe(ev => {
+  for(let i = 0; i < Network.DeadPlayers.length; i++)
+  {
+    if(Network.DeadPlayers[i] == ev.player.id)
+    {
+      Network.DeadPlayers.splice(i, 1);
+    }
+  }
+});
+
 world.afterEvents.worldInitialize.subscribe((ev) => {
   const dynamicProperties = new DynamicPropertiesDefinition();
   dynamicProperties.defineString("autoConnectIP", 15);
