@@ -268,7 +268,8 @@ system.runInterval(() => {
         },
         Rotation: plr.getRotation().y,
         CaveDensity: plr.dimension.id == "minecraft:overworld" ? GetCaveDensity(plr) : 0.0,
-        IsDead: Network.DeadPlayers.includes(plr.id)
+        IsDead: Network.DeadPlayers.includes(plr.id),
+        InWater: plr.dimension.getBlock(plr.getHeadLocation())?.isLiquid
       }));
     const packet = new UpdatePlayersPacket();
     packet.LoginKey = Network.Key;
