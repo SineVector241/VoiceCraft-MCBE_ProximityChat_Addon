@@ -62,7 +62,7 @@ CommandSystem.RegisterCommand(
     const ServerKey = world.getDynamicProperty("autoConnectServerKey");
     if (isEmptyOrSpaces(IP) || isEmptyOrSpaces(ServerKey) || Port === null) {
       params.source.sendMessage(
-        "§cError. Cannot connect. AutoBind settings may not be setup properly!"
+        "§cError. Cannot connect. AutoConnect settings may not be setup properly!"
       );
       return;
     }
@@ -73,6 +73,49 @@ CommandSystem.RegisterCommand(
 );
 
 CommandSystem.RegisterCommand(
+  "setautobind",
+  function(params) {
+    var hasTag = params.source.getTags().findIndex(x => x.includes("VCAutoBind:")) != -1;
+    if(hasTag)
+    {
+      params.source.sendMessage(
+        `§cError. Cannot set autobind. You already have an auto bind key set! please remove it by using the ${CommandSystem.Prefix}clearautobind command.`
+      );
+      return;
+    }
+
+    if(params.source.addTag(`VCAutoBind:${params.Key}`))
+      params.source.sendMessage(`§2Successfully set autobind key to ${params.Key}`);
+    else
+      params.source.sendMessage("§cAn error occurred!");
+  },
+  {
+    Key: "integer"
+  }
+)
+
+CommandSystem.RegisterCommand(
+  "clearautobind",
+  function(params)
+  {
+    var tag = params.source.getTags().find(x => x.includes("VCAutoBind:"));
+    if(tag && params.source.removeTag(tag))
+    {
+      params.source.sendMessage(
+        `§2Successfully cleared autobind!`
+      );
+    }
+    else
+    {
+      params.source.sendMessage(
+        `§cError. Unable to clear autobind. It may already be cleared or an error occurred!`
+      );
+    }
+  },
+  {}
+)
+
+CommandSystem.RegisterCommand(
   "help",
   function(params) {
     params.source.sendMessage("§bVoiceCraft Commands\n" + 
@@ -80,6 +123,8 @@ CommandSystem.RegisterCommand(
     "§g- settings -> §bGives you an item to access voicecraft settings panel/gui.\n" + 
     "§g- bind [Key: string] -> §bBinds the client running the command to a client connected to the voicecraft server.\n" + 
     "§g- autoconnect -> §bTakes the settings from the autoconnect settings and attempts connection.\n" + 
+    "§g- setautobind -> §bSets an auto bind tag for the player who ran the command.\n" +
+    "§g- clearautobind -> §bClears the auto bind tag for the player who ran the command.\n" +
     "§g- help -> §bHelp command.");
   },
   {}
@@ -114,6 +159,17 @@ world.afterEvents.entityDie.subscribe(ev => {
 });
 
 world.afterEvents.playerSpawn.subscribe(ev => {
+  if(ev.initialSpawn && Network.IsConnected)
+  {
+    var hasTag = ev.player.getTags().find(x => x.includes("VCAutoBind:"));
+    if(hasTag)
+    {
+      var key = hasTag.replace("VCAutoBind:", "");
+      ev.player.sendMessage(`§2Autobinding Enabled. §eBinding to key: ${key}`);
+      Network.RequestBinding(key, ev.player);
+    }
+  }
+
   for(let i = 0; i < Network.DeadPlayers.length; i++)
   {
     if(Network.DeadPlayers[i] == ev.player.id)
