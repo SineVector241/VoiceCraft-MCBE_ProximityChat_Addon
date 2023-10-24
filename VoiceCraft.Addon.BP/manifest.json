@@ -24,8 +24,8 @@
 		"uuid": "87b49038-e613-4216-b265-6101b83376e2",
 		"version": [
 			1,
-			0,
-			0
+			4,
+			1
 		]
 	},
 	"modules": [
@@ -53,7 +53,7 @@
 	"dependencies": [
 		{
 			"module_name": "@minecraft/server",
-			"version": "1.6.0-beta"
+			"version": "1.7.0-beta"
 		},
 		{
 			"module_name": "@minecraft/server-net",
