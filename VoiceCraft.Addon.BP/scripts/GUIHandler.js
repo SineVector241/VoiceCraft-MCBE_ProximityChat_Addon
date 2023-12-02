@@ -25,6 +25,8 @@ class GUIHandler {
     switch (page) {
       case this.UIScreens.MainPage:
         MainPage.show(player).then((result) => {
+          if(result.canceled) return;
+          
           switch (result.selection) {
             case 0:
               this.ShowUI(GUIHandler.UIScreens.ExternalSettingsPage, player);
