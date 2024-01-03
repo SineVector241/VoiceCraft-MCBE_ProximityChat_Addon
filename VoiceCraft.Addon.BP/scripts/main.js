@@ -54,6 +54,19 @@ CommandSystem.RegisterCommand(
 );
 
 CommandSystem.RegisterCommand(
+  "bindfake",
+  function(params)
+  {
+    params.source.sendMessage("§eBinding Fake Player...");
+    Network.RequestFakeBinding(params.Key, params.Name, params.source);
+  },
+  {
+    Key: "integer",
+    Name:"string"
+  }
+)
+
+CommandSystem.RegisterCommand(
   "autoconnect",
   function (params) {
     const IP = world.getDynamicProperty("autoConnectIP");

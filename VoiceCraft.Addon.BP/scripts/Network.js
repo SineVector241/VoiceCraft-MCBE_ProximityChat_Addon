@@ -6,6 +6,7 @@ import {
 } from "@minecraft/server-net";
 import { world, system, Player, Vector } from "@minecraft/server";
 import { ModalFormData } from "@minecraft/server-ui";
+import { MCCommPacket, PacketType, Login, UpdateSettings, VoiceCraftPlayer, Update, Deny, Bind } from "./Packets/MCCommPacket";
 
 class Network {
   static IsConnected = false;
@@ -34,8 +35,12 @@ class Network {
     this.Port = Port;
     this.Key = Key;
 
-    const packet = new LoginPacket();
-    packet.LoginKey = Key;
+    const packetData = new Login();
+    packetData.LoginKey = Key;
+
+    const packet = new MCCommPacket();
+    packet.PacketType = PacketType.Login;
+    packet.PacketData = packetData;
 
     const request = new HttpRequest(`http://${this.IP}:${this.Port}/`);
     request.setTimeout(5);
@@ -44,13 +49,17 @@ class Network {
     request.setHeaders([new HttpHeader("Content-Type", "application/json")]);
     http.request(request).then((response) => {
       if (response.status == 200) {
-        this.IsConnected = true;
-        PlayerObject.sendMessage(
-          "§aLogin Accepted. Server successfully linked!"
-        );
-      } else if (response.status == 403) {
-        this.IsConnected = false;
-        PlayerObject.sendMessage("§cLogin Denied. Server denied link request!");
+        /** @type {MCCommPacket} */
+        const json = JSON.parse(response.body);
+        if (json.PacketType == PacketType.Accept) {
+          this.IsConnected = true;
+          PlayerObject.sendMessage(
+            "§aLogin Accepted. Server successfully linked!"
+          );
+        } else if (json.PacketType == PacketType.Deny) {
+          this.IsConnected = false;
+          PlayerObject.sendMessage("§cLogin Denied. Server denied link request!");
+        }
       } else {
         this.IsConnected = false;
         PlayerObject.sendMessage(
@@ -72,11 +81,14 @@ class Network {
       return;
     }
 
-    const packet = new BindingPacket();
-    packet.LoginKey = this.Key;
-    packet.Gamertag = PlayerObject.name;
-    packet.PlayerKey = Key;
-    packet.PlayerId = PlayerObject.id;
+    const packetData = new Bind();
+    packetData.Gamertag = PlayerObject.name;
+    packetData.PlayerKey = Key;
+    packetData.PlayerId = PlayerObject.id;
+
+    const packet = new MCCommPacket();
+    packet.PacketType = PacketType.Bind;
+    packet.PacketData = packetData;
 
     const request = new HttpRequest(`http://${this.IP}:${this.Port}/`);
     request.setTimeout(5);
@@ -84,15 +96,85 @@ class Network {
     request.setMethod(HttpRequestMethod.Post);
     request.setHeaders([new HttpHeader("Content-Type", "application/json")]);
     http.request(request).then((response) => {
-      if (response.status == 202) {
-        PlayerObject.sendMessage("§2Binded successfully!");
-        if (world.getDynamicProperty("sendBindedMessage"))
-          world.sendMessage(
-            `§b${PlayerObject.name} §2has connected to VoiceCraft!`
+      if (response.status == 200) {
+        /** @type {MCCommPacket} */
+        const json = JSON.parse(response.body);
+        if(json.PacketType == PacketType.Accept)
+        {
+          PlayerObject.sendMessage("§2Binded successfully!");
+          if (world.getDynamicProperty("sendBindedMessage"))
+            world.sendMessage(
+              `§b${PlayerObject.name} §2has connected to VoiceCraft!`
+            );
+        }
+        else {
+          /** @type {Deny} */
+          const packetData = json.PacketData;
+          PlayerObject.sendMessage(
+            `§cBinding Unsuccessfull. Reason: ${packetData.Reason}`
           );
-      } else {
+        }
+      }
+      else
+      {
         PlayerObject.sendMessage(
-          "§cBinding Unsuccessfull. Could not find binding key, key has already been binded to a participant or you are already binded!"
+          "§cBinding Unsuccessfull. Reason: Unknown"
+        );
+      }
+    });
+  }
+
+  /**
+   * @argument {string} Key
+   * @argument {string} Name
+   * @argument {Player} PlayerObject
+   */
+  static RequestFakeBinding(Key, Name, PlayerObject) {
+    if (!Network.IsConnected) {
+      PlayerObject.sendMessage(
+        "§cCould not request session key. Server not linked!"
+      );
+      return;
+    }
+
+    const packetData = new Bind();
+    packetData.Gamertag = Name;
+    packetData.PlayerKey = Key;
+    packetData.PlayerId = "1";
+
+    const packet = new MCCommPacket();
+    packet.PacketType = PacketType.Bind;
+    packet.PacketData = packetData;
+
+    const request = new HttpRequest(`http://${this.IP}:${this.Port}/`);
+    request.setTimeout(5);
+    request.setBody(JSON.stringify(packet));
+    request.setMethod(HttpRequestMethod.Post);
+    request.setHeaders([new HttpHeader("Content-Type", "application/json")]);
+    http.request(request).then((response) => {
+      if (response.status == 200) {
+        /** @type {MCCommPacket} */
+        const json = JSON.parse(response.body);
+        if(json.PacketType == PacketType.Accept)
+        {
+          PlayerObject.sendMessage("§2Binded successfully!");
+          if (world.getDynamicProperty("sendBindedMessage"))
+            world.sendMessage(
+              `§b${PlayerObject.name} §2has connected to VoiceCraft!`
+            );
+        }
+        else {
+          /** @type {Deny} */
+          const packetData = json.PacketData;
+          PlayerObject.sendMessage(
+            `§cBinding Unsuccessfull. Reason: ${packetData.Reason}`
+          );
+        }
+      }
+      else
+      {
+        PlayerObject.sendMessage(
+          "§cBinding Unsuccessfull. Reason: Unknown"
         );
       }
     });
@@ -112,11 +194,14 @@ class Network {
       return;
     }
 
-    const packet = new UpdateSettingsPacket();
-    packet.LoginKey = this.Key;
-    packet.Settings.ProximityDistance = ProximityDistance;
-    packet.Settings.ProximityToggle = ProximityToggle;
-    packet.Settings.VoiceEffects = VoiceEffects;
+    const packetData = new UpdateSettings();
+    packetData.ProximityDistance = ProximityDistance;
+    packetData.ProximityToggle = ProximityToggle;
+    packetData.VoiceEffects = VoiceEffects;
+
+    const packet = new MCCommPacket();
+    packet.PacketType = PacketType.UpdateSettings;
+    packet.PacketData = packetData;
 
     const request = new HttpRequest(`http://${this.IP}:${this.Port}/`);
     request.setTimeout(5);
@@ -125,13 +210,18 @@ class Network {
     request.setHeaders([new HttpHeader("Content-Type", "application/json")]);
     http.request(request).then((response) => {
       if (response.status == 200) {
-        PlayerObject.sendMessage(
-          "§2Successfully set external server settings!"
-        );
-      } else {
-        PlayerObject.sendMessage(
-          "§cAn error occured! Could not update settings!"
-        );
+        /** @type {MCCommPacket} */
+        const json = JSON.parse(response.body);
+
+        if (json.PacketType == PacketType.Accept) {
+          PlayerObject.sendMessage(
+            "§2Successfully set external server settings!"
+          );
+        } else {
+          PlayerObject.sendMessage(
+            "§cAn error occured! Could not update settings!"
+          );
+        }
       }
     });
   }
@@ -147,8 +237,8 @@ class Network {
       return;
     }
 
-    const packet = new GetSettingsPacket();
-    packet.LoginKey = this.Key;
+    const packet = new MCCommPacket();
+    packet.PacketType = PacketType.GetSettings;
 
     const request = new HttpRequest(`http://${this.IP}:${this.Port}/`);
     request.setTimeout(5);
@@ -157,27 +247,28 @@ class Network {
     request.setHeaders([new HttpHeader("Content-Type", "application/json")]);
     http.request(request).then((response) => {
       if (response.status == 200) {
+        /** @type {MCCommPacket} */
         const json = JSON.parse(response.body);
-        const settings = new ServerSettings();
-        settings.ProximityDistance = json.Settings.ProximityDistance;
-        settings.ProximityToggle = json.Settings.ProximityToggle;
-        settings.VoiceEffects = json.Settings.VoiceEffects;
 
-        new ModalFormData()
-          .title("External Server Settings")
-          .slider("Proximity Distance", 1, 60, 1, settings.ProximityDistance)
-          .toggle("Proximity Enabled", settings.ProximityToggle)
-          .toggle("Voice Effects", settings.VoiceEffects)
-          .show(PlayerObject)
-          .then((response) => {
-            if (response.canceled) return;
-            this.UpdateSettings(
-              PlayerObject,
-              response.formValues[0],
-              response.formValues[1],
-              response.formValues[2]
-            );
-          });
+        if (json.PacketType == PacketType.UpdateSettings) {
+          /** @type {UpdateSettings} */
+          const settings = json.PacketData;
+          new ModalFormData()
+            .title("External Server Settings")
+            .slider("Proximity Distance", 1, 60, 1, settings.ProximityDistance)
+            .toggle("Proximity Enabled", settings.ProximityToggle)
+            .toggle("Voice Effects", settings.VoiceEffects)
+            .show(PlayerObject)
+            .then((response) => {
+              if (response.canceled) return;
+              this.UpdateSettings(
+                PlayerObject,
+                response.formValues[0],
+                response.formValues[1],
+                response.formValues[2]
+              );
+            });
+        }
       } else {
         PlayerObject.sendMessage("§cAn error occured!");
       }
@@ -185,59 +276,11 @@ class Network {
   }
 }
 
-class LoginPacket {
-  constructor() {
-    this.Type = 0;
-    this.LoginKey = "";
-  }
-}
-
-class BindingPacket {
-  constructor() {
-    this.Type = 1;
-    this.LoginKey = "";
-    this.PlayerId = "";
-    this.PlayerKey = 0;
-    this.Gamertag = "";
-  }
-}
-
-class UpdatePlayersPacket {
-  constructor() {
-    this.Type = 2;
-    this.LoginKey = "";
-    this.Players = [];
-  }
-}
-
-class UpdateSettingsPacket {
-  constructor() {
-    this.Type = 3;
-    this.LoginKey = "";
-    this.Settings = new ServerSettings();
-  }
-}
-
-class GetSettingsPacket {
-  constructor() {
-    this.Type = 4;
-    this.LoginKey = "";
-  }
-}
-
-class ServerSettings {
-  constructor() {
-    this.ProximityDistance = 30;
-    this.ProximityToggle = true;
-    this.VoiceEffects = true;
-  }
-}
-
 /**
  * @argument {Player} player
  */
 function GetCaveDensity(player) {
-  if(!Network.VoiceEffectEnabled && Network.IsConnected) return 0.0;
+  if (!Network.VoiceEffectEnabled && Network.IsConnected) return 0.0;
   const caveBlocks = ["minecraft:stone",
     "minecraft:diorite",
     "minecraft:granite",
@@ -258,22 +301,23 @@ system.runInterval(() => {
   if (Network.IsConnected) {
     const playerList = world
       .getAllPlayers()
-      .map((plr) => ({
-        PlayerId: plr.id,
-        DimensionId: plr.dimension.id,
-        Location: {
-          x: plr.getHeadLocation().x,
-          y: plr.getHeadLocation().y,
-          z: plr.getHeadLocation().z,
-        },
-        Rotation: plr.getRotation().y,
-        CaveDensity: plr.dimension.id == "minecraft:overworld" ? GetCaveDensity(plr) : 0.0,
-        IsDead: Network.DeadPlayers.includes(plr.id),
-        InWater: plr.dimension.getBlock(plr.getHeadLocation())?.isLiquid
-      }));
-    const packet = new UpdatePlayersPacket();
-    packet.LoginKey = Network.Key;
-    packet.Players = playerList;
+      .map((plr) => {
+        const player = new VoiceCraftPlayer();
+        player.PlayerId = plr.id;
+        player.DimensionId = plr.dimension.id;
+        player.Location = plr.getHeadLocation();
+        player.Rotation = plr.getRotation().y;
+        player.CaveDensity = plr.dimension.id == "minecraft:overworld" ? GetCaveDensity(plr) : 0.0;
+        player.IsDead = Network.DeadPlayers.includes(plr.id);
+        player.InWater = plr.dimension.getBlock(plr.getHeadLocation())?.isLiquid;
+        return player;
+      });
+    const packetData = new Update();
+    packetData.Players = playerList;
+
+    const packet = new MCCommPacket();
+    packet.PacketType = PacketType.Update;
+    packet.PacketData = packetData;
 
     const request = new HttpRequest(`http://${Network.IP}:${Network.Port}/`);
     request.setTimeout(5);
@@ -285,6 +329,17 @@ system.runInterval(() => {
       if (response.status != 200) {
         Network.IsConnected = false;
         http.cancelAll("Lost Connection From VOIP Server");
+        return;
+      }
+
+      /** @type {MCCommPacket} */
+      const json = JSON.parse(response.body);
+      if (json.PacketType == PacketType.Deny) {
+        /** @type {Deny} */
+        const packetData = json.PacketData;
+        Network.IsConnected = false;
+        http.cancelAll(packetData.Reason);
+        return;
       }
     });
   }
@@ -317,8 +372,8 @@ system.runInterval(() => {
 
 system.runInterval(() => {
   if (Network.IsConnected) {
-    const packet = new GetSettingsPacket();
-    packet.LoginKey = Network.Key;
+    const packet = new MCCommPacket();
+    packet.PacketType = PacketType.GetSettings;
 
     const request = new HttpRequest(`http://${Network.IP}:${Network.Port}/`);
     request.setTimeout(5);
@@ -327,15 +382,17 @@ system.runInterval(() => {
     request.setHeaders([new HttpHeader("Content-Type", "application/json")]);
     http.request(request).then((response) => {
       if (response.status == 200) {
+        /** @type {MCCommPacket} */
         const json = JSON.parse(response.body);
-        const settings = new ServerSettings();
-        settings.ProximityDistance = json.Settings.ProximityDistance;
-        settings.ProximityToggle = json.Settings.ProximityToggle;
-        settings.VoiceEffects = json.Settings.VoiceEffects;
 
-        Network.ProximityDistance = settings.ProximityDistance;
-        Network.ProximityEnabled = settings.ProximityToggle;
-        Network.VoiceEffectEnabled = settings.VoiceEffects;
+        if (json.PacketType == PacketType.UpdateSettings) {
+          /** @type {UpdateSettings} */
+          const settings = json.PacketData;
+
+          Network.ProximityDistance = settings.ProximityDistance;
+          Network.ProximityEnabled = settings.ProximityToggle;
+          Network.VoiceEffectEnabled = settings.VoiceEffects;
+        }
       }
     });
   }
