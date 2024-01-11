@@ -6,7 +6,7 @@ import {
 } from "@minecraft/server-net";
 import { world, system, Player, Vector } from "@minecraft/server";
 import { ModalFormData } from "@minecraft/server-ui";
-import { MCCommPacket, PacketType, Login, UpdateSettings, VoiceCraftPlayer, Update, Deny, Bind } from "./Packets/MCCommPacket";
+import { MCCommPacket, PacketType, Login, UpdateSettings, VoiceCraftPlayer, Update, Deny, Bind, ChannelMove } from "./Packets/MCCommPacket";
 
 class Network {
   static IsConnected = false;
@@ -125,11 +125,10 @@ class Network {
   }
 
   /**
-   * @argument {string} Key
-   * @argument {string} Name
+   * @argument {Number} ChannelId
    * @argument {Player} PlayerObject
    */
-  static RequestFakeBinding(Key, Name, PlayerObject) {
+  static ChannelMove(ChannelId, PlayerObject) {
     if (!Network.IsConnected) {
       PlayerObject.sendMessage(
         "§cCould not request session key. Server not linked!"
@@ -137,13 +136,12 @@ class Network {
       return;
     }
 
-    const packetData = new Bind();
-    packetData.Gamertag = Name;
-    packetData.PlayerKey = Key;
-    packetData.PlayerId = "1";
+    const packetData = new ChannelMove();
+    packetData.ChannelId = ChannelId;
+    packetData.PlayerId = PlayerObject.id;
 
     const packet = new MCCommPacket();
-    packet.PacketType = PacketType.Bind;
+    packet.PacketType = PacketType.ChannelMove;
     packet.PacketData = packetData;
 
     const request = new HttpRequest(`http://${this.IP}:${this.Port}/`);
@@ -157,24 +155,20 @@ class Network {
         const json = JSON.parse(response.body);
         if(json.PacketType == PacketType.Accept)
         {
-          PlayerObject.sendMessage("§2Binded successfully!");
-          if (world.getDynamicProperty("sendBindedMessage"))
-            world.sendMessage(
-              `§b${PlayerObject.name} §2has connected to VoiceCraft!`
-            );
+          PlayerObject.sendMessage("§2Switched Successfully!");
         }
         else {
           /** @type {Deny} */
           const packetData = json.PacketData;
           PlayerObject.sendMessage(
-            `§cBinding Unsuccessfull. Reason: ${packetData.Reason}`
+            `§cSwitch Unsuccessfull. Reason: ${packetData.Reason}`
           );
         }
       }
       else
       {
         PlayerObject.sendMessage(
-          "§cBinding Unsuccessfull. Reason: Unknown"
+          "§cSwitch Unsuccessfull. Reason: Unknown"
         );
       }
     });
