@@ -14,8 +14,7 @@ class CommandSystem {
 
   static executeCommand(input, source, event) {
     if (input.startsWith(CommandSystem.Prefix)) {
-      event.sendToTargets = true;
-      event.setTargets([]);
+      event.cancel = true;
       system.run(() => {
         const text = input.replace(this.Prefix, "");
         const parts = text.split(" ");
