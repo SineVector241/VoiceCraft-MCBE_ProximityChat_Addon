@@ -4,15 +4,23 @@ import {
   EntityInventoryComponent,
   ItemStack,
   world,
-  system,
-  Vector
+  system
 } from "@minecraft/server";
 import { GUIHandler } from "./GUIHandler";
+
+/** @type {Network} */
+const Network = new Network();
+const GUI = new GUIHandler(Network);
 
 CommandSystem.RegisterCommand(
   "connect",
   function (params) {
-    Network.Connect(params.IP, params.PORT, params.Key, params.source);
+      params.source.sendMessage("§eConnecting/Linking Server...");
+      Network.Connect(params.IP, params.PORT, params.Key, params.source).then(() => {
+        params.source.sendMessage("§aLogin Accepted. Server successfully linked!");
+      }).catch(res => {
+        params.source.sendMessage(`§c${res}`);
+      });
   },
   {
     IP: "string",
@@ -46,7 +54,15 @@ CommandSystem.RegisterCommand(
   "bind",
   function (params) {
     params.source.sendMessage("§eBinding...");
-    Network.RequestBinding(params.Key, params.source);
+    Network.BindPlayer(params.Key, params.source).then(() => {
+      params.source.sendMessage("§aBinding Successful!");
+      if (world.getDynamicProperty("sendBindedMessage"))
+            world.sendMessage(
+              `§b${params.source.name} §2has connected to VoiceCraft!`
+            );
+    }).catch(res => {
+      params.source.sendMessage(`§c${res}`);
+    });
   },
   {
     Key: "integer",
@@ -66,53 +82,51 @@ CommandSystem.RegisterCommand(
       return;
     }
 
-    Network.Connect(IP, Port, ServerKey, params.source);
+    params.source.sendMessage("§eConnecting/Linking Server...");
+    Network.Connect(params.IP, params.PORT, params.Key, params.source)
+      .then(() => {
+        params.source.sendMessage(
+          "§aLogin Accepted. Server successfully linked!"
+        );
+      })
+      .catch((res) => {
+        params.source.sendMessage(`§c${res}`);
+      });
   },
   {}
 );
 
 CommandSystem.RegisterCommand(
   "setautobind",
-  function(params) {
-    var hasTag = params.source.getTags().findIndex(x => x.includes("VCAutoBind:")) != -1;
-    if(hasTag)
-    {
+  function (params) {
+    try {
+      params.source.setDynamicProperty("VCAutoBind", params.Key);
       params.source.sendMessage(
-        `§cError. Cannot set autobind. You already have an auto bind key set! please remove it by using the ${CommandSystem.Prefix}clearautobind command.`
+        `§2Successfully set autobind key to ${params.Key}`
       );
-      return;
+    } catch (ex) {
+      params.source.sendMessage(`§cAn error occurred! Reason: ${ex}`);
     }
-
-    if(params.source.addTag(`VCAutoBind:${params.Key}`))
-      params.source.sendMessage(`§2Successfully set autobind key to ${params.Key}`);
-    else
-      params.source.sendMessage("§cAn error occurred!");
   },
   {
-    Key: "integer"
+    Key: "integer",
   }
-)
+);
 
 CommandSystem.RegisterCommand(
   "clearautobind",
-  function(params)
-  {
-    var tag = params.source.getTags().find(x => x.includes("VCAutoBind:"));
-    if(tag && params.source.removeTag(tag))
-    {
+  function (params) {
+    try {
+      params.source.setDynamicProperty("VCAutoBind", null);
+      params.source.sendMessage(`§2Successfully cleared autobind!`);
+    } catch (ex) {
       params.source.sendMessage(
-        `§2Successfully cleared autobind!`
-      );
-    }
-    else
-    {
-      params.source.sendMessage(
-        `§cError. Unable to clear autobind. It may already be cleared or an error occurred!`
+        `§cError. Unable to clear autobind. Reason: ${ex}`
       );
     }
   },
   {}
-)
+);
 
 CommandSystem.RegisterCommand(
   "help",
@@ -135,20 +149,12 @@ world.beforeEvents.itemUse.subscribe((ev) => {
   system.run(() => {
     try {
       if (item.getLore()[0] == "Open VoiceCraft Settings") {
-        GUIHandler.ShowUI(GUIHandler.UIScreens.MainPage, player);
+        GUI.ShowUI(GUIHandler.UIScreens.MainPage, player);
       }
     } catch (ex) {
       player.sendMessage(ex.toString());
     }
   })
-});
-
-world.beforeEvents.chatSend.subscribe(ev => {
-  if(world.getDynamicProperty("textProximityChat"))
-  {
-    ev.setTargets(world.getAllPlayers().filter(x => x.dimension.id === ev.sender.dimension.id && Vector.distance(x.location, ev.sender.location) <= world.getDynamicProperty("textProximityDistance")));
-    ev.sendToTargets = true;
-  }
 });
 
 world.afterEvents.entityDie.subscribe(ev => {
@@ -161,12 +167,16 @@ world.afterEvents.entityDie.subscribe(ev => {
 world.afterEvents.playerSpawn.subscribe(ev => {
   if(ev.initialSpawn && Network.IsConnected)
   {
-    var hasTag = ev.player.getTags().find(x => x.includes("VCAutoBind:"));
-    if(hasTag)
+    const player = ev.player;
+    const key = ev.player.getDynamicProperty("VCAutoBind");
+    if(key != null)
     {
-      var key = hasTag.replace("VCAutoBind:", "");
-      ev.player.sendMessage(`§2Autobinding Enabled. §eBinding to key: ${key}`);
-      Network.RequestBinding(key, ev.player);
+      player.sendMessage(`§2Autobinding Enabled. §eBinding to key: ${key}`);
+      Network.BindPlayer(key, player).then(() => {
+        player.sendMessage("§aBinding Successful!");
+      }).catch(res => {
+        player.sendMessage(`§c${res}`);
+      });
     }
   }
 

@@ -15,7 +15,8 @@ const PacketType = Object.freeze({
     GetSettings: 6,
     RemoveParticipant: 7,
     ChannelMove: 8,
-    Null: 9
+    AcceptUpdate: 9,
+    Null: 10
 });
 
 class Login {
@@ -50,6 +51,14 @@ class Update {
     constructor() {
         /** @type {VoiceCraftPlayer[]} */
         this.Players = [];
+    }
+}
+
+class AcceptUpdate {
+    constructor()
+    {
+        /** @type {String[]} */
+        this.SpeakingPlayers = [];
     }
 }
 
@@ -105,4 +114,4 @@ class VoiceCraftPlayer {
     }
 }
 
-export { PacketType, MCCommPacket, VoiceCraftPlayer, Login, Accept, Deny, Bind, Update, UpdateSettings, GetSettings, RemoveParticipant, ChannelMove, Null } 
+export { PacketType, MCCommPacket, VoiceCraftPlayer, Login, Accept, Deny, Bind, Update, AcceptUpdate, UpdateSettings, GetSettings, RemoveParticipant, ChannelMove, Null } 

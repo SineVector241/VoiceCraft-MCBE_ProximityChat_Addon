@@ -10,6 +10,11 @@ const MainPage = new ActionFormData()
   .button("Auto Connect");
 
 class GUIHandler {
+  /** @param {Network} network */
+  constructor(network) {
+    /** @type {Network} */
+    this.Network = network;
+  }
   static UIScreens = Object.freeze({
     MainPage: 1,
     ExternalSettingsPage: 2,
@@ -21,9 +26,9 @@ class GUIHandler {
    * @argument {Number} page
    * @argument {Player} player
    */
-  static ShowUI(page, player) {
+  ShowUI(page, player) {
     switch (page) {
-      case this.UIScreens.MainPage:
+      case GUIHandler.UIScreens.MainPage:
         MainPage.show(player).then((result) => {
           if(result.canceled) return;
           
@@ -51,34 +56,58 @@ class GUIHandler {
                 return;
               }
 
-              Network.Connect(IP, Port, ServerKey, player);
+              player.sendMessage("§eConnecting/Linking Server...");
+              this.Network.Connect(IP, Port, ServerKey).then(() => {
+                player.sendMessage("§aLogin Accepted. Server successfully linked!");
+              }).catch(res => {
+                player.sendMessage(`§c${res}`);
+              });
               break;
           }
         });
         break;
-      case this.UIScreens.ExternalSettingsPage:
-        Network.ShowSettings(player);
+      case GUIHandler.UIScreens.ExternalSettingsPage:
+        this.Network.GetSettings().then(res => {
+          new ModalFormData()
+            .title("External Server Settings")
+            .slider("Proximity Distance", 1, 60, 1, res.ProximityDistance)
+            .toggle("Proximity Enabled", res.ProximityToggle)
+            .toggle("Voice Effects", res.VoiceEffects)
+            .show(player)
+            .then((response) => {
+              if (response.canceled) return;
+              player.sendMessage("§eUpdating Settings...");
+              this.Network.UpdateSettings(
+                response.formValues[0],
+                response.formValues[1],
+                response.formValues[2]
+              ).then(() => player.sendMessage("§2Successfully updated external server settings!"))
+              .catch(res => {
+                player.sendMessage(`§c${res}`);
+              });
+            });
+        }).catch(res => {
+          player.sendMessage(`§c${res}`);
+        });
         break;
 
-      case this.UIScreens.InternalSettingsPage:
+      case GUIHandler.UIScreens.InternalSettingsPage:
         new ModalFormData()
           .title("Internal Server Settings")
           .toggle("Broadcast Participant Bind's", world.getDynamicProperty("sendBindedMessage"))
+          .toggle("Broadcast VOIP Disconnection", world.getDynamicProperty("broadcastVoipDisconnection"))
           .toggle("Server Settings Hud Display", world.getDynamicProperty("serverSettingsHudDisplay"))
           .toggle("Display Server Address On Hud", world.getDynamicProperty("displayServerAddressOnHud"))
-          .toggle("Enable Text Proximity Chat", world.getDynamicProperty("textProximityChat"))
-          .slider("Text Proximity Chat Distance", 1, 60, 1, world.getDynamicProperty("textProximityDistance"))
           .show(player)
           .then((results) => {
             if(results.canceled) return;
 
-            const [ BB, SSHD, DSAOH, TPC, TPCD ] = results.formValues;
+            const [ BB, BVD, SSHD, DSAOH ] = results.formValues;
 
             world.setDynamicProperty("sendBindedMessage", BB);
+            world.setDynamicProperty("broadcastVoipDisconnection", BVD);
             world.setDynamicProperty("displayServerAddressOnHud", DSAOH);
             world.setDynamicProperty("serverSettingsHudDisplay", SSHD);
-            world.setDynamicProperty("textProximityChat", TPC);
-            world.setDynamicProperty("textProximityDistance", TPCD);
 
             player.sendMessage(
               "§2Successfully set internal server settings!"
@@ -86,7 +115,7 @@ class GUIHandler {
           });
         break;
 
-      case this.UIScreens.AutoConnectPage:
+      case GUIHandler.UIScreens.AutoConnectPage:
         const IP = world.getDynamicProperty("autoConnectIP");
         var Port = world.getDynamicProperty("autoConnectPort");
         const ServerKey = world.getDynamicProperty("autoConnectServerKey");
