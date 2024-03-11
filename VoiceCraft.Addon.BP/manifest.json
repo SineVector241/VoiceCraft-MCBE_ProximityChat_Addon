@@ -3,15 +3,7 @@
 	"metadata": {
 		"authors": [
 			"SineVector241"
-		],
-		"generated_with": {
-			"bridge": [
-				"2.6.0"
-			],
-			"dash": [
-				"0.10.8"
-			]
-		}
+		]
 	},
 	"header": {
 		"name": "pack.name",
@@ -25,7 +17,7 @@
 		"version": [
 			1,
 			0,
-			2
+			3
 		]
 	},
 	"modules": [
