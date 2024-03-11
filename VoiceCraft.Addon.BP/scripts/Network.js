@@ -171,6 +171,40 @@ class Network {
   }
 
   /**
+   * @param {String} Id
+   * @param {Vector3} Location
+   * @param {String} DimensionId
+   */
+  async UpdateFake(Id, Location, DimensionId)
+  {
+    const packetData = new Update();
+    const player = new VoiceCraftPlayer();
+    player.PlayerId = Id;
+    player.Location = Location;
+    player.DimensionId = DimensionId;
+    packetData.Players = [ player ];
+
+    const packet = new MCCommPacket();
+    packet.PacketType = PacketType.Update;
+    packet.PacketData = packetData;
+
+    const response = await this.SendHttpRequest(packet);
+    if (response.status == 200) {
+      /** @type {MCCommPacket} */
+      const responsePacket = JSON.parse(response.body);
+      if (responsePacket.PacketType == PacketType.AcceptUpdate) {
+        return;
+      } else {
+        /** @type {Deny} */
+        const packetData = responsePacket.PacketData;
+        throw `Update Unsuccessful. Reason: ${packetData.Reason}`;
+      }
+    } else {
+      throw `Update Unsuccessful. Reason: HTTP_EXCEPTION, STATUS_CODE: ${response.status}`;
+    }
+  }
+
+  /**
    * @param {Number} ChannelId
    * @param {Player} Player
    */

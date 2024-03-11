@@ -90,6 +90,22 @@ CommandSystem.RegisterCommand(
 )
 
 CommandSystem.RegisterCommand(
+  "updatefake",
+  function (params) {
+    params.source.sendMessage("§eUpdating fake player...");
+    var location = params.source.getHeadLocation();
+    Network.UpdateFake(params.Id, location, params.source.dimension.id).then(() => {
+      params.source.sendMessage("§aUpdate Successful!");
+    }).catch(res => {
+      params.source.sendMessage(`§c${res}`);
+    });
+  },
+  {
+    Id: "string"
+  }
+)
+
+CommandSystem.RegisterCommand(
   "autoconnect",
   function (params) {
     const IP = world.getDynamicProperty("autoConnectIP");
