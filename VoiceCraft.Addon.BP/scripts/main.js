@@ -70,6 +70,26 @@ CommandSystem.RegisterCommand(
 );
 
 CommandSystem.RegisterCommand(
+  "bindfake",
+  function (params) {
+    params.source.sendMessage("§eBinding fake player...");
+    Network.BindFake(params.Key, params.Name, params.Name).then(() => {
+      params.source.sendMessage("§aBinding Successful!");
+      if (world.getDynamicProperty("sendBindedMessage"))
+        world.sendMessage(
+          `§b${params.source.name} §2has connected to VoiceCraft!`
+        );
+    }).catch(res => {
+      params.source.sendMessage(`§c${res}`);
+    });
+  },
+  {
+    Key: "integer",
+    Name: "string"
+  }
+)
+
+CommandSystem.RegisterCommand(
   "autoconnect",
   function (params) {
     const IP = world.getDynamicProperty("autoConnectIP");

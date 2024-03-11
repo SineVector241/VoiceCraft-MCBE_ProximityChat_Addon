@@ -137,6 +137,38 @@ class Network {
       throw `Binding Unsuccessful. Reason: HTTP_EXCEPTION, STATUS_CODE: ${response.status}`;
     }
   }
+  
+  /**
+   * @param {String} Key 
+   * @param {String} Name 
+   * @param {String} Id 
+   */
+  async BindFake(Key, Name, Id)
+  {
+    const packetData = new Bind();
+    packetData.Gamertag = Name;
+    packetData.PlayerKey = Key;
+    packetData.PlayerId = Id;
+
+    const packet = new MCCommPacket();
+    packet.PacketType = PacketType.Bind;
+    packet.PacketData = packetData;
+
+    const response = await this.SendHttpRequest(packet);
+    if (response.status == 200) {
+      /** @type {MCCommPacket} */
+      const responsePacket = JSON.parse(response.body);
+      if (responsePacket.PacketType == PacketType.Accept) {
+        return;
+      } else {
+        /** @type {Deny} */
+        const packetData = responsePacket.PacketData;
+        throw `Binding Unsuccessful. Reason: ${packetData.Reason}`;
+      }
+    } else {
+      throw `Binding Unsuccessful. Reason: HTTP_EXCEPTION, STATUS_CODE: ${response.status}`;
+    }
+  }
 
   /**
    * @param {Number} ChannelId
