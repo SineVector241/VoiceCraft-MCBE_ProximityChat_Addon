@@ -4,7 +4,7 @@ import {
   EntityInventoryComponent,
   ItemStack,
   world,
-  system
+  system,
 } from "@minecraft/server";
 import { GUIHandler } from "./GUIHandler";
 
@@ -15,10 +15,14 @@ const GUI = new GUIHandler(Network);
 CommandSystem.RegisterCommand(
   "connect",
   function (params) {
-      params.source.sendMessage("§eConnecting/Linking Server...");
-      Network.Connect(params.IP, params.PORT, params.Key, params.source).then(() => {
-        params.source.sendMessage("§aLogin Accepted. Server successfully linked!");
-      }).catch(res => {
+    params.source.sendMessage("§eConnecting/Linking Server...");
+    Network.Connect(params.IP, params.PORT, params.Key, params.source)
+      .then(() => {
+        params.source.sendMessage(
+          "§aLogin Accepted. Server successfully linked!"
+        );
+      })
+      .catch((res) => {
         params.source.sendMessage(`§c${res}`);
       });
   },
@@ -54,15 +58,17 @@ CommandSystem.RegisterCommand(
   "bind",
   function (params) {
     params.source.sendMessage("§eBinding...");
-    Network.BindPlayer(params.Key, params.source).then(() => {
-      params.source.sendMessage("§aBinding Successful!");
-      if (world.getDynamicProperty("sendBindedMessage"))
-            world.sendMessage(
-              `§b${params.source.name} §2has connected to VoiceCraft!`
-            );
-    }).catch(res => {
-      params.source.sendMessage(`§c${res}`);
-    });
+    Network.BindPlayer(params.Key, params.source)
+      .then(() => {
+        params.source.sendMessage("§aBinding Successful!");
+        if (world.getDynamicProperty("sendBindedMessage"))
+          world.sendMessage(
+            `§b${params.source.name} §2has connected to VoiceCraft!`
+          );
+      })
+      .catch((res) => {
+        params.source.sendMessage(`§c${res}`);
+      });
   },
   {
     Key: "integer",
@@ -73,37 +79,41 @@ CommandSystem.RegisterCommand(
   "bindfake",
   function (params) {
     params.source.sendMessage("§eBinding fake player...");
-    Network.BindFake(params.Key, params.Name, params.Name).then(() => {
-      params.source.sendMessage("§aBinding Successful!");
-      if (world.getDynamicProperty("sendBindedMessage"))
-        world.sendMessage(
-          `§b${params.source.name} §2has connected to VoiceCraft!`
-        );
-    }).catch(res => {
-      params.source.sendMessage(`§c${res}`);
-    });
+    Network.BindFake(params.Key, params.Name, params.Name)
+      .then(() => {
+        params.source.sendMessage("§aBinding Successful!");
+        if (world.getDynamicProperty("sendBindedMessage"))
+          world.sendMessage(
+            `§b${params.source.name} §2has connected to VoiceCraft!`
+          );
+      })
+      .catch((res) => {
+        params.source.sendMessage(`§c${res}`);
+      });
   },
   {
     Key: "integer",
-    Name: "string"
+    Name: "string",
   }
-)
+);
 
 CommandSystem.RegisterCommand(
   "updatefake",
   function (params) {
     params.source.sendMessage("§eUpdating fake player...");
     var location = params.source.getHeadLocation();
-    Network.UpdateFake(params.Id, location, params.source.dimension.id).then(() => {
-      params.source.sendMessage("§aUpdate Successful!");
-    }).catch(res => {
-      params.source.sendMessage(`§c${res}`);
-    });
+    Network.UpdateFake(params.Id, location, params.source.dimension.id)
+      .then(() => {
+        params.source.sendMessage("§aUpdate Successful!");
+      })
+      .catch((res) => {
+        params.source.sendMessage(`§c${res}`);
+      });
   },
   {
-    Id: "string"
+    Id: "string",
   }
-)
+);
 
 CommandSystem.RegisterCommand(
   "autoconnect",
@@ -119,14 +129,12 @@ CommandSystem.RegisterCommand(
     }
 
     params.source.sendMessage("§eConnecting/Linking Server...");
-    Network.Connect(params.IP, params.PORT, params.Key, params.source)
+    this.Network.Connect(IP, Port, ServerKey)
       .then(() => {
-        params.source.sendMessage(
-          "§aLogin Accepted. Server successfully linked!"
-        );
+        player.sendMessage("§aLogin Accepted. Server successfully linked!");
       })
       .catch((res) => {
-        params.source.sendMessage(`§c${res}`);
+        player.sendMessage(`§c${res}`);
       });
   },
   {}
@@ -166,18 +174,20 @@ CommandSystem.RegisterCommand(
 
 CommandSystem.RegisterCommand(
   "help",
-  function(params) {
-    params.source.sendMessage("§bVoiceCraft Commands\n" + 
-    "§g- connect [IP: string] [Port: integer] [Key: string] -> §bAttempts connection to a voicecraft server.\n" +
-    "§g- settings -> §bGives you an item to access voicecraft settings panel/gui.\n" + 
-    "§g- bind [Key: string] -> §bBinds the client running the command to a client connected to the voicecraft server.\n" + 
-    "§g- autoconnect -> §bTakes the settings from the autoconnect settings and attempts connection.\n" + 
-    "§g- setautobind -> §bSets an auto bind tag for the player who ran the command.\n" +
-    "§g- clearautobind -> §bClears the auto bind tag for the player who ran the command.\n" +
-    "§g- help -> §bHelp command.");
+  function (params) {
+    params.source.sendMessage(
+      "§bVoiceCraft Commands\n" +
+        "§g- connect [IP: string] [Port: integer] [Key: string] -> §bAttempts connection to a voicecraft server.\n" +
+        "§g- settings -> §bGives you an item to access voicecraft settings panel/gui.\n" +
+        "§g- bind [Key: string] -> §bBinds the client running the command to a client connected to the voicecraft server.\n" +
+        "§g- autoconnect -> §bTakes the settings from the autoconnect settings and attempts connection.\n" +
+        "§g- setautobind -> §bSets an auto bind tag for the player who ran the command.\n" +
+        "§g- clearautobind -> §bClears the auto bind tag for the player who ran the command.\n" +
+        "§g- help -> §bHelp command."
+    );
   },
   {}
-)
+);
 
 world.beforeEvents.itemUse.subscribe((ev) => {
   const player = ev.source;
@@ -190,36 +200,33 @@ world.beforeEvents.itemUse.subscribe((ev) => {
     } catch (ex) {
       player.sendMessage(ex.toString());
     }
-  })
+  });
 });
 
-world.afterEvents.entityDie.subscribe(ev => {
-  if(ev.deadEntity.typeId == "minecraft:player")
-  {
+world.afterEvents.entityDie.subscribe((ev) => {
+  if (ev.deadEntity.typeId == "minecraft:player") {
     Network.DeadPlayers.push(ev.deadEntity.id);
   }
 });
 
-world.afterEvents.playerSpawn.subscribe(ev => {
-  if(ev.initialSpawn && Network.IsConnected)
-  {
+world.afterEvents.playerSpawn.subscribe((ev) => {
+  if (ev.initialSpawn && Network.IsConnected) {
     const player = ev.player;
     const key = ev.player.getDynamicProperty("VCAutoBind");
-    if(key != null)
-    {
+    if (key != null) {
       player.sendMessage(`§2Autobinding Enabled. §eBinding to key: ${key}`);
-      Network.BindPlayer(key, player).then(() => {
-        player.sendMessage("§aBinding Successful!");
-      }).catch(res => {
-        player.sendMessage(`§c${res}`);
-      });
+      Network.BindPlayer(key, player)
+        .then(() => {
+          player.sendMessage("§aBinding Successful!");
+        })
+        .catch((res) => {
+          player.sendMessage(`§c${res}`);
+        });
     }
   }
 
-  for(let i = 0; i < Network.DeadPlayers.length; i++)
-  {
-    if(Network.DeadPlayers[i] == ev.player.id)
-    {
+  for (let i = 0; i < Network.DeadPlayers.length; i++) {
+    if (Network.DeadPlayers[i] == ev.player.id) {
       Network.DeadPlayers.splice(i, 1);
     }
   }
