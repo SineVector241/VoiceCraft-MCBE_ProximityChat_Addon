@@ -129,12 +129,12 @@ CommandSystem.RegisterCommand(
     }
 
     params.source.sendMessage("§eConnecting/Linking Server...");
-    this.Network.Connect(IP, Port, ServerKey)
+    Network.Connect(IP, Port, ServerKey)
       .then(() => {
-        player.sendMessage("§aLogin Accepted. Server successfully linked!");
+        params.source.sendMessage("§aLogin Accepted. Server successfully linked!");
       })
       .catch((res) => {
-        player.sendMessage(`§c${res}`);
+        params.source.sendMessage(`§c${res}`);
       });
   },
   {}
