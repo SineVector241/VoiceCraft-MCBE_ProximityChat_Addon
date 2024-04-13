@@ -1,7 +1,8 @@
 class MCCommPacket {
-    constructor() {
-        this.PacketType = PacketType.Null,
-            this.PacketData = new Null();
+    /** @argument {Number} packetId */
+    constructor(packetId) {
+        this.PacketId = packetId;
+        this.Token = "";
     }
 }
 
@@ -15,29 +16,35 @@ const PacketType = Object.freeze({
     GetSettings: 6,
     RemoveParticipant: 7,
     ChannelMove: 8,
-    AcceptUpdate: 9,
-    Null: 10
+    AcceptUpdate: 9
 });
 
-class Login {
+class Login extends MCCommPacket {
     constructor() {
+        super(PacketType.Login);
         /** @type {String} */
         this.LoginKey = "";
     }
 }
 
-class Accept {
+class Accept extends MCCommPacket {
+    constructor()
+    {
+        super(PacketType.Accept);
+    }
 }
 
-class Deny {
+class Deny extends MCCommPacket {
     constructor() {
+        super(PacketType.Deny);
         /** @type {String} */
         this.Reason = "";
     }
 }
 
-class Bind {
+class Bind extends MCCommPacket {
     constructor() {
+        super(PacketType.Bind);
         /** @type {String} */
         this.PlayerId = "";
         /** @type {Number} */
@@ -47,23 +54,26 @@ class Bind {
     }
 }
 
-class Update {
+class Update extends MCCommPacket {
     constructor() {
+        super(PacketType.Update);
         /** @type {VoiceCraftPlayer[]} */
         this.Players = [];
     }
 }
 
-class AcceptUpdate {
+class AcceptUpdate extends MCCommPacket {
     constructor()
     {
+        super(PacketType.AcceptUpdate);
         /** @type {String[]} */
         this.SpeakingPlayers = [];
     }
 }
 
-class UpdateSettings {
+class UpdateSettings extends MCCommPacket {
     constructor() {
+        super(PacketType.UpdateSettings);
         /** @type {Number} */
         this.ProximityDistance = 30;
         /** @type {Boolean} */
@@ -73,26 +83,29 @@ class UpdateSettings {
     }
 }
 
-class GetSettings {
+class GetSettings extends MCCommPacket {
+    constructor()
+    {
+        super(PacketType.GetSettings);
+    }
 }
 
-class RemoveParticipant {
+class RemoveParticipant extends MCCommPacket {
     constructor() {
+        super(PacketType.RemoveParticipant);
         /** @type {String} */
         this.PlayerId = "";
     }
 }
 
-class ChannelMove {
+class ChannelMove extends MCCommPacket {
     constructor() {
+        super(PacketType.ChannelMove);
         /** @type {String} */
         this.PlayerId = "";
         /** @type {Number} */
         this.ChannelId = 0;
     }
-}
-
-class Null {
 }
 
 class VoiceCraftPlayer {
@@ -114,4 +127,4 @@ class VoiceCraftPlayer {
     }
 }
 
-export { PacketType, MCCommPacket, VoiceCraftPlayer, Login, Accept, Deny, Bind, Update, AcceptUpdate, UpdateSettings, GetSettings, RemoveParticipant, ChannelMove, Null } 
+export { PacketType, MCCommPacket, VoiceCraftPlayer, Login, Accept, Deny, Bind, Update, AcceptUpdate, UpdateSettings, GetSettings, RemoveParticipant, ChannelMove } 

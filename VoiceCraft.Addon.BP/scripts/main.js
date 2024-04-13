@@ -84,7 +84,7 @@ CommandSystem.RegisterCommand(
         params.source.sendMessage("§aBinding Successful!");
         if (world.getDynamicProperty("sendBindedMessage"))
           world.sendMessage(
-            `§b${params.Name} §2has connected to VoiceCraft!`
+            `§b${params.source.name} §2has connected to VoiceCraft!`
           );
       })
       .catch((res) => {

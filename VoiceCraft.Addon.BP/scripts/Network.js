@@ -15,6 +15,8 @@ import {
   VoiceCraftPlayer,
   AcceptUpdate,
   Bind,
+  Accept,
+  GetSettings,
 } from "./Packets/MCCommPacket";
 import { Vector, Player, system, world } from "@minecraft/server";
 
@@ -26,6 +28,8 @@ class Network {
     this.Port = 9051;
     /** @type {String} */
     this.Key = "";
+    /** @type {String} */
+    this.Token = "";
     /** @type {Boolean} */
     this.IsConnected = false;
     /** @type {String[]} */
@@ -75,20 +79,19 @@ class Network {
     this.Port = Port;
     this.Key = Key;
 
-    const packetData = new Login();
-    packetData.LoginKey = Key;
-
-    const packet = new MCCommPacket();
-    packet.PacketType = PacketType.Login;
-    packet.PacketData = packetData;
+    const packet = new Login();
+    packet.LoginKey = Key;
 
     const response = await this.SendHttpRequest(packet);
     if (response.status == 200) {
       /** @type {MCCommPacket} */
       const responsePacket = JSON.parse(response.body);
 
-      if (responsePacket.PacketType == PacketType.Accept) {
+      if (responsePacket.PacketId == PacketType.Accept) {
+        /** @type {Accept} */
+        const data = responsePacket;
         this.IsConnected = true;
+        this.Token = data.Token;
         this.UpdateLoop = system.runInterval(() => this.Update());
         this.SettingsUpdateLoop = system.runInterval(
           () => this.SettingsUpdate(),
@@ -97,7 +100,7 @@ class Network {
         return;
       } else {
         /** @type {Deny} */
-        const data = responsePacket.PacketData;
+        const data = responsePacket;
         throw `Login Denied. Server denied link request! Reason: ${data.Reason}`;
       }
     } else {
@@ -113,25 +116,22 @@ class Network {
   async BindPlayer(Key, Player) {
     if (!this.IsConnected) throw "Could not bind, Server not linked!";
 
-    const packetData = new Bind();
-    packetData.Gamertag = Player.name;
-    packetData.PlayerKey = Key;
-    packetData.PlayerId = Player.id;
-
-    const packet = new MCCommPacket();
-    packet.PacketType = PacketType.Bind;
-    packet.PacketData = packetData;
+    const packet = new Bind();
+    packet.Gamertag = Player.name;
+    packet.PlayerKey = Key;
+    packet.PlayerId = Player.id;
+    packet.Token = this.Token;
 
     const response = await this.SendHttpRequest(packet);
     if (response.status == 200) {
       /** @type {MCCommPacket} */
       const responsePacket = JSON.parse(response.body);
-      if (responsePacket.PacketType == PacketType.Accept) {
+      if (responsePacket.PacketId == PacketType.Accept) {
         return;
       } else {
         /** @type {Deny} */
-        const packetData = responsePacket.PacketData;
-        throw `Binding Unsuccessful. Reason: ${packetData.Reason}`;
+        const data = responsePacket;
+        throw `Binding Unsuccessful. Reason: ${data.Reason}`;
       }
     } else {
       throw `Binding Unsuccessful. Reason: HTTP_EXCEPTION, STATUS_CODE: ${response.status}`;
@@ -145,25 +145,22 @@ class Network {
    */
   async BindFake(Key, Name, Id)
   {
-    const packetData = new Bind();
-    packetData.Gamertag = Name;
-    packetData.PlayerKey = Key;
-    packetData.PlayerId = Id;
-
-    const packet = new MCCommPacket();
-    packet.PacketType = PacketType.Bind;
-    packet.PacketData = packetData;
+    const packet = new Bind();
+    packet.Gamertag = Name;
+    packet.PlayerKey = Key;
+    packet.PlayerId = Id;
+    packet.Token = this.Token;
 
     const response = await this.SendHttpRequest(packet);
     if (response.status == 200) {
       /** @type {MCCommPacket} */
       const responsePacket = JSON.parse(response.body);
-      if (responsePacket.PacketType == PacketType.Accept) {
+      if (responsePacket.PacketId == PacketType.Accept) {
         return;
       } else {
         /** @type {Deny} */
-        const packetData = responsePacket.PacketData;
-        throw `Binding Unsuccessful. Reason: ${packetData.Reason}`;
+        const data = responsePacket;
+        throw `Binding Unsuccessful. Reason: ${data.Reason}`;
       }
     } else {
       throw `Binding Unsuccessful. Reason: HTTP_EXCEPTION, STATUS_CODE: ${response.status}`;
@@ -177,27 +174,24 @@ class Network {
    */
   async UpdateFake(Id, Location, DimensionId)
   {
-    const packetData = new Update();
+    const packet= new Update();
     const player = new VoiceCraftPlayer();
     player.PlayerId = Id;
     player.Location = Location;
     player.DimensionId = DimensionId;
-    packetData.Players = [ player ];
-
-    const packet = new MCCommPacket();
-    packet.PacketType = PacketType.Update;
-    packet.PacketData = packetData;
+    packet.Players = [ player ];
+    packet.Token = this.Token;
 
     const response = await this.SendHttpRequest(packet);
     if (response.status == 200) {
       /** @type {MCCommPacket} */
       const responsePacket = JSON.parse(response.body);
-      if (responsePacket.PacketType == PacketType.AcceptUpdate) {
+      if (responsePacket.PacketId == PacketType.AcceptUpdate) {
         return;
       } else {
         /** @type {Deny} */
-        const packetData = responsePacket.PacketData;
-        throw `Update Unsuccessful. Reason: ${packetData.Reason}`;
+        const data = responsePacket;
+        throw `Update Unsuccessful. Reason: ${data.Reason}`;
       }
     } else {
       throw `Update Unsuccessful. Reason: HTTP_EXCEPTION, STATUS_CODE: ${response.status}`;
@@ -212,24 +206,21 @@ class Network {
     if (ChannelId < 1 || ChannelId > 255) throw "Invalid ChannelId!";
     if (!this.IsConnected) throw "Could not move channel, Server not linked!";
 
-    const packetData = new ChannelMove();
-    packetData.ChannelId = ChannelId;
-    packetData.PlayerId = PlayerObject.id;
-
-    const packet = new MCCommPacket();
-    packet.PacketType = PacketType.ChannelMove;
-    packet.PacketData = packetData;
+    const packet = new ChannelMove();
+    packet.ChannelId = ChannelId;
+    packet.PlayerId = PlayerObject.id;
+    packet.Token = this.Token;
 
     const response = await this.SendHttpRequest(packet);
     if (response.status == 200) {
       /** @type {MCCommPacket} */
       const responsePacket = JSON.parse(response.body);
-      if (responsePacket.PacketType == PacketType.Accept) {
+      if (responsePacket.PacketId == PacketType.Accept) {
         return;
       } else {
         /** @type {Deny} */
-        const packetData = responsePacket.PacketData;
-        throw `Could not switch channels. Reason: ${packetData.Reason}`;
+        const data = responsePacket;
+        throw `Could not switch channels. Reason: ${data.Reason}`;
       }
     } else {
       throw `Could not switch channels. Reason: HTTP_EXCEPTION, STATUS_CODE: ${response.status}`;
@@ -245,25 +236,22 @@ class Network {
     if (!this.IsConnected)
       throw "Could not update settings, Server not linked!";
 
-    const packetData = new UpdateSettings();
-    packetData.ProximityDistance = ProximityDistance;
-    packetData.ProximityToggle = ProximityToggle;
-    packetData.VoiceEffects = VoiceEffects;
-
-    const packet = new MCCommPacket();
-    packet.PacketType = PacketType.UpdateSettings;
-    packet.PacketData = packetData;
+    const packet = new UpdateSettings();
+    packet.ProximityDistance = ProximityDistance;
+    packet.ProximityToggle = ProximityToggle;
+    packet.VoiceEffects = VoiceEffects;
+    packet.Token = this.Token;
 
     const response = await this.SendHttpRequest(packet);
     if (response.status == 200) {
       /** @type {MCCommPacket} */
       const responsePacket = JSON.parse(response.body);
-      if (responsePacket.PacketType == PacketType.Accept) {
+      if (responsePacket.PacketId == PacketType.Accept) {
         return;
       } else {
         /** @type {Deny} */
-        const packetData = responsePacket.PacketData;
-        throw `Could not update settings! Reason: ${packetData.Reason}`;
+        const data = responsePacket;
+        throw `Could not update settings! Reason: ${data.Reason}`;
       }
     } else {
       throw `Could not update settings. Reason: HTTP_EXCEPTION, STATUS_CODE: ${response.status}`;
@@ -276,21 +264,21 @@ class Network {
   async GetSettings() {
     if (!this.IsConnected) throw "Could not get settings, Server not linked!";
 
-    const packet = new MCCommPacket();
-    packet.PacketType = PacketType.GetSettings;
+    const packet = new GetSettings();
+    packet.Token = this.Token;
 
     const response = await this.SendHttpRequest(packet);
     if (response.status == 200) {
       /** @type {MCCommPacket} */
       const responsePacket = JSON.parse(response.body);
 
-      if (responsePacket.PacketType == PacketType.UpdateSettings) {
+      if (responsePacket.PacketId == PacketType.UpdateSettings) {
         /** @type {UpdateSettings} */
-        return responsePacket.PacketData;
+        return responsePacket;
       } else {
         /** @type {Deny} */
-        const packetData = responsePacket.PacketData;
-        throw `Could not get settings, Reason: ${packetData.Reason}`;
+        const data = responsePacket;
+        throw `Could not get settings, Reason: ${data.Reason}`;
       }
     } else {
       throw `Could not get settings, Reason: HTTP_EXCEPTION, STATUS_CODE: ${response.status}`;
@@ -381,12 +369,9 @@ class Network {
           )?.isLiquid;
           return player;
         });
-        const packetData = new Update();
-        packetData.Players = playerList;
-
-        const packet = new MCCommPacket();
-        packet.PacketType = PacketType.Update;
-        packet.PacketData = packetData;
+        const packet = new Update();
+        packet.Players = playerList;
+        packet.Token = this.Token;
 
         const response = await this.SendHttpRequest(packet);
         if (response.status != 200 && this.IsConnected) {
@@ -401,7 +386,7 @@ class Network {
 
         /** @type {MCCommPacket} */
         const responsePacket = JSON.parse(response.body);
-        if (responsePacket.PacketType == PacketType.Deny) {
+        if (responsePacket.PacketId == PacketType.Deny) {
           /** @type {Deny} */
           const packetData = responsePacket.PacketData;
           this.IsConnected = false;
@@ -411,8 +396,7 @@ class Network {
           return;
         } else if (responsePacket == PacketType.AcceptUpdate) {
           /** @type {AcceptUpdate} */
-          const packetData = responsePacket.PacketData;
-
+          const data = responsePacket;
           //You can do stuff with the accept update packet data here...
         }
       } catch (ex) {
@@ -444,17 +428,17 @@ class Network {
   async SettingsUpdate() {
     if (this.IsConnected) {
       try {
-        const packet = new MCCommPacket();
-        packet.PacketType = PacketType.GetSettings;
+        const packet = new GetSettings();
+        packet.Token = this.Token;
 
         const response = await this.SendHttpRequest(packet);
         if (response.status == 200) {
           /** @type {MCCommPacket} */
           const responsePacket = JSON.parse(response.body);
 
-          if (responsePacket.PacketType == PacketType.UpdateSettings) {
+          if (responsePacket.PacketId == PacketType.UpdateSettings) {
             /** @type {UpdateSettings} */
-            const settings = responsePacket.PacketData;
+            const settings = responsePacket;
 
             this.ProximityDistance = settings.ProximityDistance;
             this.ProximityEnabled = settings.ProximityToggle;
