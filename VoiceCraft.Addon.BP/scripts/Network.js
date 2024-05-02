@@ -18,7 +18,8 @@ import {
   Accept,
   GetSettings,
 } from "./Packets/MCCommPacket";
-import { Vector, Player, system, world } from "@minecraft/server";
+import { Player, system, world } from "@minecraft/server";
+import { Vec3 } from "./vec3";
 
 class Network {
   constructor() {
@@ -306,42 +307,42 @@ class Network {
 
     const dimension = world.getDimension("overworld");
     const block1 = this.CaveBlocks.includes(
-      dimension.getBlockFromRay(Player.getHeadLocation(), Vector.up, {
+      dimension.getBlockFromRay(Player.getHeadLocation(), Vec3.up, {
         maxDistance: 50,
       })?.block.type.id
     )
       ? 1
       : 0;
     const block2 = this.CaveBlocks.includes(
-      dimension.getBlockFromRay(Player.getHeadLocation(), Vector.left, {
+      dimension.getBlockFromRay(Player.getHeadLocation(), Vec3.left, {
         maxDistance: 20,
       })?.block.type.id
     )
       ? 1
       : 0;
     const block3 = this.CaveBlocks.includes(
-      dimension.getBlockFromRay(Player.getHeadLocation(), Vector.right, {
+      dimension.getBlockFromRay(Player.getHeadLocation(), Vec3.right, {
         maxDistance: 20,
       })?.block.type.id
     )
       ? 1
       : 0;
     const block4 = this.CaveBlocks.includes(
-      dimension.getBlockFromRay(Player.getHeadLocation(), Vector.forward, {
+      dimension.getBlockFromRay(Player.getHeadLocation(), Vec3.forward, {
         maxDistance: 20,
       })?.block.type.id
     )
       ? 1
       : 0;
     const block5 = this.CaveBlocks.includes(
-      dimension.getBlockFromRay(Player.getHeadLocation(), Vector.back, {
+      dimension.getBlockFromRay(Player.getHeadLocation(), Vec3.backward, {
         maxDistance: 20,
       })?.block.type.id
     )
       ? 1
       : 0;
     const block6 = this.CaveBlocks.includes(
-      dimension.getBlockFromRay(Player.getHeadLocation(), Vector.down, {
+      dimension.getBlockFromRay(Player.getHeadLocation(), Vec3.down, {
         maxDistance: 50,
       })?.block.type.id
     )
