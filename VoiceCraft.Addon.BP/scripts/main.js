@@ -1,5 +1,5 @@
 import { CommandSystem } from "./Commands/CommandSystem";
-import { Network } from "./Network";
+import { Network } from "./Network/Network";
 import {
   EntityInventoryComponent,
   ItemStack,
@@ -58,7 +58,7 @@ CommandSystem.RegisterCommand(
   "bind",
   function (params) {
     params.source.sendMessage("§eBinding...");
-    Network.BindPlayer(params.Key, params.source)
+    Network.Bind(params.source, params.Key)
       .then(() => {
         params.source.sendMessage("§aBinding Successful!");
         if (world.getDynamicProperty("sendBindedMessage"))
@@ -75,6 +75,7 @@ CommandSystem.RegisterCommand(
   }
 );
 
+/*
 CommandSystem.RegisterCommand(
   "bindfake",
   function (params) {
@@ -114,6 +115,7 @@ CommandSystem.RegisterCommand(
     Id: "string",
   }
 );
+*/
 
 CommandSystem.RegisterCommand(
   "autoconnect",
@@ -205,7 +207,7 @@ world.beforeEvents.itemUse.subscribe((ev) => {
 
 world.afterEvents.entityDie.subscribe((ev) => {
   if (ev.deadEntity.typeId == "minecraft:player") {
-    Network.DeadPlayers.push(ev.deadEntity.id);
+    Network.NetworkRunner.DeadPlayers.push(ev.deadEntity.id);
   }
 });
 
@@ -225,9 +227,9 @@ world.afterEvents.playerSpawn.subscribe((ev) => {
     }
   }
 
-  for (let i = 0; i < Network.DeadPlayers.length; i++) {
-    if (Network.DeadPlayers[i] == ev.player.id) {
-      Network.DeadPlayers.splice(i, 1);
+  for (let i = 0; i < Network.NetworkRunner.DeadPlayers.length; i++) {
+    if (Network.NetworkRunner.DeadPlayers[i] == ev.player.id) {
+      Network.NetworkRunner.DeadPlayers.splice(i, 1);
     }
   }
 });
