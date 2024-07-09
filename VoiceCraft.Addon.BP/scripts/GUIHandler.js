@@ -48,9 +48,11 @@ class GUIHandler {
 
       case GUIHandler.UIScreens.ChannelsPage:
         this.ShowChannels(player);
+        break;
 
       case GUIHandler.UIScreens.PlayersPage:
         this.ShowPlayers(player);
+        break;
     }
   }
 
