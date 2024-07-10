@@ -18,6 +18,7 @@ import {
   SetChannelSettings,
   GetDefaultSettings,
   SetDefaultSettings,
+  GetParticipants,
   DisconnectParticipant,
   GetParticipantBitmask,
   SetParticipantBitmask,
@@ -25,6 +26,9 @@ import {
   UnmuteParticipant,
   DeafenParticipant,
   UndeafenParticipant,
+  ANDModParticipantBitmask,
+  ORModParticipantBitmask,
+  XORModParticipantBitmask,
   ChannelMove,
 } from "./MCCommAPI";
 import { NetworkRunner } from "./NetworkRunner";
@@ -287,6 +291,33 @@ class Network {
   }
 
   /**
+   * @description Get's a list of connected and binded player Id's.
+   * @returns {Promise<String[]>}
+   */
+  async GetParticipants() {
+    if (!this.IsConnected)
+      throw "Could not retrieve participants, Server not connected/linked!";
+
+    const packet = new GetParticipants();
+    packet.Token = this.Token;
+
+    try {
+      const response = await this.SendPacket(packet);
+      if (response.PacketId == PacketType.GetParticipants) {
+        /** @type {GetParticipants} */
+        const packetData = response;
+        return packetData.Players;
+      } else {
+        /** @type {Deny} */
+        const packetData = response;
+        throw `Could not retrieve participants, Reason: ${packetData.Reason}`;
+      }
+    } catch (ex) {
+      throw `Could not retrieve participants, ERROR: ${ex}`;
+    }
+  }
+
+  /**
    * @description Disconnects a player from the VoiceCraft server.
    * @param {Player} player
    * @returns {Promise<void>}
@@ -476,6 +507,93 @@ class Network {
       }
     } catch (ex) {
       throw `Could not undeafen player, ERROR: ${ex}`;
+    }
+  }
+
+  /**
+   * @description AND modify's a player's VoiceCraft client bitmask.
+   * @param {Player} player
+   * @param {Number} bitmask
+   * @returns {Promise<void>}
+   */
+  async ANDModPlayerBitmask(player, bitmask) {
+    if (!this.IsConnected)
+      throw "Could AND mod player bitmask, Server not connected/linked!";
+
+    const packet = new ANDModParticipantBitmask();
+    packet.PlayerId = player.id;
+    packet.Bitmask = bitmask;
+    packet.Token = this.Token;
+
+    try {
+      const response = await this.SendPacket(packet);
+      if (response.PacketId == PacketType.Accept) {
+        return;
+      } else {
+        /** @type {Deny} */
+        const packetData = response;
+        throw `Could not AND mod player bitmask, Reason: ${packetData.Reason}`;
+      }
+    } catch (ex) {
+      throw `Could not AND mod player bitmask, ERROR: ${ex}`;
+    }
+  }
+
+  /**
+   * @description OR modify's a player's VoiceCraft client bitmask.
+   * @param {Player} player
+   * @param {Number} bitmask
+   * @returns {Promise<void>}
+   */
+  async ORModPlayerBitmask(player) {
+    if (!this.IsConnected)
+      throw "Could not OR mod player bitmask, Server not connected/linked!";
+
+    const packet = new ORModParticipantBitmask();
+    packet.PlayerId = player.id;
+    packet.Bitmask = bitmask;
+    packet.Token = this.Token;
+
+    try {
+      const response = await this.SendPacket(packet);
+      if (response.PacketId == PacketType.Accept) {
+        return;
+      } else {
+        /** @type {Deny} */
+        const packetData = response;
+        throw `Could not OR mod player bitmask, Reason: ${packetData.Reason}`;
+      }
+    } catch (ex) {
+      throw `Could not OR mod player bitmask, ERROR: ${ex}`;
+    }
+  }
+
+  /**
+   * @description XOR modify's a player's VoiceCraft client bitmask.
+   * @param {Player} player
+   * @param {Number} bitmask
+   * @returns {Promise<void>}
+   */
+  async XORModPlayerBitmask(player) {
+    if (!this.IsConnected)
+      throw "Could not XOR mod player bitmask, Server not connected/linked!";
+
+    const packet = new XORModParticipantBitmask();
+    packet.PlayerId = player.id;
+    packet.Bitmask = bitmask;
+    packet.Token = this.Token;
+
+    try {
+      const response = await this.SendPacket(packet);
+      if (response.PacketId == PacketType.Accept) {
+        return;
+      } else {
+        /** @type {Deny} */
+        const packetData = response;
+        throw `Could not XOR mod player bitmask, Reason: ${packetData.Reason}`;
+      }
+    } catch (ex) {
+      throw `Could not XOR mod player bitmask, ERROR: ${ex}`;
     }
   }
 

@@ -1,7 +1,12 @@
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 import { Network } from "./Network/Network";
 import { Player, world } from "@minecraft/server";
-import { Channel, ParticipantBitmask } from "./Network/MCCommAPI";
+import {
+  BitmaskLocations,
+  BitmaskMap,
+  BitmaskSettings,
+  Channel,
+} from "./Network/MCCommAPI";
 
 class GUIHandler {
   /** @param {Network} network */
@@ -327,16 +332,29 @@ class GUIHandler {
    * @param {Player} player
    */
   ShowPlayers(player) {
-    const page = new ActionFormData().title("Players");
-    const players = world.getAllPlayers();
-    for (const cPlayer of players) {
-      page.button(cPlayer.name);
-    }
+    this.Network.GetParticipants().then((res) => {
+      if(res.length <= 0)
+      {
+        player.sendMessage("§cNo players are connected to VoiceCraft.");
+        return;
+      }
 
-    page.show(player).then((result) => {
-      if (result.canceled) return;
+      const page = new ActionFormData().title("Players");
+      const players = world.getAllPlayers();
 
-      this.ShowPlayerOptions(player, players[result.selection]);
+      for (const cPlayer of players) {
+        if(res.includes(cPlayer.id))
+          page.button(cPlayer.name);
+      }
+  
+      page.show(player).then((result) => {
+        if (result.canceled) return;
+  
+        this.ShowPlayerOptions(player, players[result.selection]);
+      });
+    })
+    .catch((res) => {
+      player.sendMessage(`§c${res}`);
     });
   }
 
@@ -348,18 +366,21 @@ class GUIHandler {
   ShowPlayerOptions(player, selectedPlayer) {
     const page = new ActionFormData()
       .title(`${selectedPlayer.name} Options`)
+      .button("Bitmask")
       .button("Mute")
       .button("Unmute")
       .button("Deafen")
       .button("Undeafen")
-      .button("Kick")
-      .button("Bitmask");
+      .button("Kick");
 
     page.show(player).then((result) => {
       if (result.canceled) return;
 
       switch (result.selection) {
         case 0:
+          this.ShowPlayerBitmaskOptions(player, selectedPlayer);
+          break;
+        case 1:
           this.Network.MutePlayer(selectedPlayer)
             .then(() => {
               player.sendMessage("§2Successfully muted player!");
@@ -368,7 +389,7 @@ class GUIHandler {
               player.sendMessage(`§c${res}`);
             });
           break;
-        case 1:
+        case 2:
           this.Network.UnmutePlayer(selectedPlayer)
             .then(() => {
               player.sendMessage("§2Successfully unmuted player!");
@@ -377,7 +398,7 @@ class GUIHandler {
               player.sendMessage(`§c${res}`);
             });
           break;
-        case 2:
+        case 3:
           this.Network.DeafenPlayer(selectedPlayer)
             .then(() => {
               player.sendMessage("§2Successfully deafened player!");
@@ -386,7 +407,7 @@ class GUIHandler {
               player.sendMessage(`§c${res}`);
             });
           break;
-        case 3:
+        case 4:
           this.Network.UndeafenPlayer(selectedPlayer)
             .then(() => {
               player.sendMessage("§2Successfully undeafened player!");
@@ -395,7 +416,7 @@ class GUIHandler {
               player.sendMessage(`§c${res}`);
             });
           break;
-        case 4:
+        case 5:
           this.Network.DisconnectPlayer(selectedPlayer)
             .then(() => {
               player.sendMessage("§2Successfully disconnected player!");
@@ -404,120 +425,290 @@ class GUIHandler {
               player.sendMessage(`§c${res}`);
             });
           break;
-        case 5:
-          this.ShowPlayerBitmaskOptions(player, selectedPlayer);
-          break;
       }
     });
   }
 
-  //I WILL DO THIS LATER!
   /**
    * @description Shows a players bitmask options.
    * @param {Player} player
    * @param {Player} selectedPlayer
    */
   ShowPlayerBitmaskOptions(player, selectedPlayer) {
+    const page = new ActionFormData()
+      .button("Bitmask1")
+      .button("Bitmask2")
+      .button("Bitmask3")
+      .button("Bitmask4")
+      .button("Bitmask5");
+
+    page.show(player).then((result) => {
+      if (result.canceled) return;
+
+      switch (result.selection) {
+        case 0:
+          this.ShowBitmask1Settings(player, selectedPlayer);
+          break;
+        case 1:
+          this.ShowBitmask2Settings(player, selectedPlayer);
+          break;
+        case 2:
+          this.ShowBitmask3Settings(player, selectedPlayer);
+          break;
+        case 3:
+          this.ShowBitmask4Settings(player, selectedPlayer);
+          break;
+        case 4:
+          this.ShowBitmask5Settings(player, selectedPlayer);
+          break;
+      }
+    });
+  }
+
+  /**
+   * @description Shows a players bitmask1 settings.
+   * @param {Player} player
+   * @param {Player} selectedPlayer
+   */
+  ShowBitmask1Settings(player, selectedPlayer) {
     this.Network.GetPlayerBitmask(selectedPlayer)
       .then((res) => {
         const page = new ModalFormData()
-          .title(`${selectedPlayer.name} Bitmask`)
+          .title(`${selectedPlayer.name} Bitmask1 Settings`)
+          .toggle("Talk Enabled", (res & BitmaskMap.TalkBitmask1) != 0)
+          .toggle("Listen Enabled", (res & BitmaskMap.ListenBitmask1) != 0)
           .toggle(
-            "Death Enabled",
-            (res & ParticipantBitmask.DeathEnabled) != 0
+            "Proximity Disabled",
+            ((res >> BitmaskLocations.Bitmask1Settings) &
+              BitmaskSettings.ProximityDisabled) !=
+              0
           )
           .toggle(
-            "Proximity Enabled",
-            (res & ParticipantBitmask.ProximityEnabled) != 0
+            "Death Disabled",
+            ((res >> BitmaskLocations.Bitmask1Settings) &
+              BitmaskSettings.DeathDisabled) !=
+              0
           )
           .toggle(
-            "Water Effect Enabled",
-            (res & ParticipantBitmask.WaterEffectEnabled) != 0
+            "VoiceEffects Disabled",
+            ((res >> BitmaskLocations.Bitmask1Settings) &
+              BitmaskSettings.VoiceEffectsDisabled) !=
+              0
           )
           .toggle(
-            "Echo Effect Enabled",
-            (res & ParticipantBitmask.EchoEffectEnabled) != 0
-          )
-          .toggle(
-            "Directional Enabled",
-            (res & ParticipantBitmask.DirectionalEnabled) != 0
-          )
-          .toggle(
-            "Environment Enabled",
-            (res & ParticipantBitmask.EnvironmentEnabled) != 0
-          )
-          .toggle(
-            "Hearing Bitmask 1",
-            (res & ParticipantBitmask.HearingBitmask1) != 0
-          )
-          .toggle(
-            "Hearing Bitmask 2",
-            (res & ParticipantBitmask.HearingBitmask2) != 0
-          )
-          .toggle(
-            "Hearing Bitmask 3",
-            (res & ParticipantBitmask.HearingBitmask3) != 0
-          )
-          .toggle(
-            "Hearing Bitmask 4",
-            (res & ParticipantBitmask.HearingBitmask4) != 0
-          )
-          .toggle(
-            "Hearing Bitmask 5",
-            (res & ParticipantBitmask.HearingBitmask5) != 0
-          )
-          .toggle(
-            "Talking Bitmask 1",
-            (res & ParticipantBitmask.TalkingBitmask1) != 0
-          )
-          .toggle(
-            "Talking Bitmask 2",
-            (res & ParticipantBitmask.TalkingBitmask2) != 0
-          )
-          .toggle(
-            "Talking Bitmask 3",
-            (res & ParticipantBitmask.TalkingBitmask3) != 0
-          )
-          .toggle(
-            "Talking Bitmask 4",
-            (res & ParticipantBitmask.TalkingBitmask4) != 0
-          )
-          .toggle(
-            "Talking Bitmask 5",
-            (res & ParticipantBitmask.TalkingBitmask5) != 0
-          )
+            "Environment Disabled",
+            ((res >> BitmaskLocations.Bitmask1Settings) &
+              BitmaskSettings.EnvironmentDisabled) !=
+              0
+          );
+
         page.show(player).then((result) => {
           if(result.canceled) return;
 
-          let bitmask = ParticipantBitmask.None;
-          const [DE, PR, WA, EC, DI, EN, H1, H2, H3, H4, H5, T1, T2, T3, T4, T5] = result.formValues;
+          res &= ~(BitmaskMap.Bitmask1Settings | BitmaskMap.TalkBitmask1 | BitmaskMap.ListenBitmask1); //Reset all values we want to modify to 0.
+          let settings = BitmaskSettings.None;
+          const [TE, LE, PD, DD, VD, ED] = result.formValues;
 
-          if(DE) bitmask = bitmask | ParticipantBitmask.DeathEnabled;
-          if(PR) bitmask = bitmask | ParticipantBitmask.ProximityEnabled;
-          if(WA) bitmask = bitmask | ParticipantBitmask.WaterEffectEnabled;
-          if(EC) bitmask = bitmask | ParticipantBitmask.EchoEffectEnabled;
-          if(DI) bitmask = bitmask | ParticipantBitmask.DirectionalEnabled;
-          if(EN) bitmask = bitmask | ParticipantBitmask.EnvironmentEnabled;
+          if(TE) res |= BitmaskMap.TalkBitmask1;
+          if(LE) res |= BitmaskMap.ListenBitmask1;
+          if(PD) settings |= BitmaskSettings.ProximityDisabled;
+          if(DD) settings |= BitmaskSettings.DeathDisabled;
+          if(VD) settings |= BitmaskSettings.VoiceEffectsDisabled;
+          if(ED) settings |= BitmaskSettings.EnvironmentDisabled;
+          settings <<= BitmaskLocations.Bitmask1Settings; //Move settings into position.
+          res |= settings; //Set settings.
 
-          if(H1) bitmask = bitmask | ParticipantBitmask.HearingBitmask1;
-          if(H2) bitmask = bitmask | ParticipantBitmask.HearingBitmask2;
-          if(H3) bitmask = bitmask | ParticipantBitmask.HearingBitmask3;
-          if(H4) bitmask = bitmask | ParticipantBitmask.HearingBitmask4;
-          if(H5) bitmask = bitmask | ParticipantBitmask.HearingBitmask5;
+          this.Network.SetPlayerBitmask(selectedPlayer, res).then(() => {
+            player.sendMessage("§2Successfully set player bitmask1 settings!");
+            })
+            .catch((res) => {
+              player.sendMessage(`§c${res}`);
+            });
+        });
+      })
+      .catch((res) => {
+        player.sendMessage(`§c${res}`);
+      });
+  }
 
-          if(T1) bitmask = bitmask | ParticipantBitmask.TalkingBitmask1;
-          if(T2) bitmask = bitmask | ParticipantBitmask.TalkingBitmask2;
-          if(T3) bitmask = bitmask | ParticipantBitmask.TalkingBitmask3;
-          if(T4) bitmask = bitmask | ParticipantBitmask.TalkingBitmask4;
-          if(T5) bitmask = bitmask | ParticipantBitmask.TalkingBitmask5;
+  /**
+   * @description Shows a players bitmask2 settings.
+   * @param {Player} player
+   * @param {Player} selectedPlayer
+   */
+  ShowBitmask2Settings(player, selectedPlayer) {
+    this.Network.GetPlayerBitmask(selectedPlayer)
+      .then((res) => {
+        const page = new ModalFormData()
+          .title(`${selectedPlayer.name} Bitmask2 Settings`)
+          .toggle("Talk Enabled", (res & BitmaskMap.TalkBitmask2) != 0)
+          .toggle("Listen Enabled", (res & BitmaskMap.ListenBitmask2) != 0)
+          .toggle(
+            "Proximity Disabled",
+            ((res >> BitmaskLocations.Bitmask2Settings) &
+              BitmaskSettings.ProximityDisabled) !=
+              0
+          )
+          .toggle(
+            "Death Disabled",
+            ((res >> BitmaskLocations.Bitmask2Settings) &
+              BitmaskSettings.DeathDisabled) !=
+              0
+          )
+          .toggle(
+            "VoiceEffects Disabled",
+            ((res >> BitmaskLocations.Bitmask2Settings) &
+              BitmaskSettings.VoiceEffectsDisabled) !=
+              0
+          )
+          .toggle(
+            "Environment Disabled",
+            ((res >> BitmaskLocations.Bitmask2Settings) &
+              BitmaskSettings.EnvironmentDisabled) !=
+              0
+          );
 
-          this.Network.SetPlayerBitmask(selectedPlayer, bitmask).then(() => {
-            player.sendMessage("§2Successfully set player bitmask!");
-          })
-          .catch((res) => {
-            player.sendMessage(`§c${res}`);
-          });
-        })
+        page.show(player).then((result) => {
+          if(result.canceled) return;
+        });
+      })
+      .catch((res) => {
+        player.sendMessage(`§c${res}`);
+      });
+  }
+
+  /**
+   * @description Shows a players bitmask3 settings.
+   * @param {Player} player
+   * @param {Player} selectedPlayer
+   */
+  ShowBitmask3Settings(player, selectedPlayer) {
+    this.Network.GetPlayerBitmask(selectedPlayer)
+      .then((res) => {
+        const page = new ModalFormData()
+          .title(`${selectedPlayer.name} Bitmask3 Settings`)
+          .toggle("Talk Enabled", (res & BitmaskMap.TalkBitmask3) != 0)
+          .toggle("Listen Enabled", (res & BitmaskMap.ListenBitmask3) != 0)
+          .toggle(
+            "Proximity Disabled",
+            ((res >> BitmaskLocations.Bitmask3Settings) &
+              BitmaskSettings.ProximityDisabled) !=
+              0
+          )
+          .toggle(
+            "Death Disabled",
+            ((res >> BitmaskLocations.Bitmask3Settings) &
+              BitmaskSettings.DeathDisabled) !=
+              0
+          )
+          .toggle(
+            "VoiceEffects Disabled",
+            ((res >> BitmaskLocations.Bitmask3Settings) &
+              BitmaskSettings.VoiceEffectsDisabled) !=
+              0
+          )
+          .toggle(
+            "Environment Disabled",
+            ((res >> BitmaskLocations.Bitmask3Settings) &
+              BitmaskSettings.EnvironmentDisabled) !=
+              0
+          );
+
+        page.show(player).then((result) => {
+          if(result.canceled) return;
+        });
+      })
+      .catch((res) => {
+        player.sendMessage(`§c${res}`);
+      });
+  }
+
+  /**
+   * @description Shows a players bitmask4 settings.
+   * @param {Player} player
+   * @param {Player} selectedPlayer
+   */
+  ShowBitmask4Settings(player, selectedPlayer) {
+    this.Network.GetPlayerBitmask(selectedPlayer)
+      .then((res) => {
+        const page = new ModalFormData()
+          .title(`${selectedPlayer.name} Bitmask4 Settings`)
+          .toggle("Talk Enabled", (res & BitmaskMap.TalkBitmask4) != 0)
+          .toggle("Listen Enabled", (res & BitmaskMap.ListenBitmask4) != 0)
+          .toggle(
+            "Proximity Disabled",
+            ((res >> BitmaskLocations.Bitmask4Settings) &
+              BitmaskSettings.ProximityDisabled) !=
+              0
+          )
+          .toggle(
+            "Death Disabled",
+            ((res >> BitmaskLocations.Bitmask4Settings) &
+              BitmaskSettings.DeathDisabled) !=
+              0
+          )
+          .toggle(
+            "VoiceEffects Disabled",
+            ((res >> BitmaskLocations.Bitmask4Settings) &
+              BitmaskSettings.VoiceEffectsDisabled) !=
+              0
+          )
+          .toggle(
+            "Environment Disabled",
+            ((res >> BitmaskLocations.Bitmask4Settings) &
+              BitmaskSettings.EnvironmentDisabled) !=
+              0
+          );
+
+        page.show(player).then((result) => {
+          if(result.canceled) return;
+        });
+      })
+      .catch((res) => {
+        player.sendMessage(`§c${res}`);
+      });
+  }
+
+  /**
+   * @description Shows a players bitmask5 settings.
+   * @param {Player} player
+   * @param {Player} selectedPlayer
+   */
+  ShowBitmask5Settings(player, selectedPlayer) {
+    this.Network.GetPlayerBitmask(selectedPlayer)
+      .then((res) => {
+        const page = new ModalFormData()
+          .title(`${selectedPlayer.name} Bitmask5 Settings`)
+          .toggle("Talk Enabled", (res & BitmaskMap.TalkBitmask5) != 0)
+          .toggle("Listen Enabled", (res & BitmaskMap.ListenBitmask5) != 0)
+          .toggle(
+            "Proximity Disabled",
+            ((res >> BitmaskLocations.Bitmask5Settings) &
+              BitmaskSettings.ProximityDisabled) !=
+              0
+          )
+          .toggle(
+            "Death Disabled",
+            ((res >> BitmaskLocations.Bitmask5Settings) &
+              BitmaskSettings.DeathDisabled) !=
+              0
+          )
+          .toggle(
+            "VoiceEffects Disabled",
+            ((res >> BitmaskLocations.Bitmask5Settings) &
+              BitmaskSettings.VoiceEffectsDisabled) !=
+              0
+          )
+          .toggle(
+            "Environment Disabled",
+            ((res >> BitmaskLocations.Bitmask5Settings) &
+              BitmaskSettings.EnvironmentDisabled) !=
+              0
+          );
+
+        page.show(player).then((result) => {
+          if(result.canceled) return;
+        });
       })
       .catch((res) => {
         player.sendMessage(`§c${res}`);

@@ -12,19 +12,20 @@ const PacketType = Object.freeze({
   SetDefaultSettings: 10,
 
   //Participant Stuff
-  DisconnectParticipant: 11,
-  GetParticipantBitmask: 12,
-  SetParticipantBitmask: 13,
-  MuteParticipant: 14,
-  UnmuteParticipant: 15,
-  DeafenParticipant: 16,
-  UndeafenParticipant: 17,
+  GetParticipants: 11,
+  DisconnectParticipant: 12,
+  GetParticipantBitmask: 13,
+  SetParticipantBitmask: 14,
+  MuteParticipant: 15,
+  UnmuteParticipant: 16,
+  DeafenParticipant: 17,
+  UndeafenParticipant: 18,
 
-  ANDModParticipantBitmask: 18,
-  ORModParticipantBitmask: 19,
-  XORModParticipantBitmask: 20,
+  ANDModParticipantBitmask: 19,
+  ORModParticipantBitmask: 20,
+  XORModParticipantBitmask: 21,
 
-  ChannelMove: 21,
+  ChannelMove: 22,
 });
 
 const BitmaskMap = Object.freeze({
@@ -89,7 +90,7 @@ const BitmaskLocations = Object.freeze({
 });
 
 const BitmaskSettings = Object.freeze({
-  All: uint.MaxValue, //1111
+  All: 4294967295, //1111
   None: 0, //0000
   ProximityDisabled: 1, //0001
   DeathDisabled: 2, //0010
@@ -217,6 +218,15 @@ class SetDefaultSettings extends MCCommPacket {
     this.ProximityToggle = true;
     /** @type {Boolean} */
     this.VoiceEffects = true;
+  }
+}
+
+class GetParticipants extends MCCommPacket {
+  constructor()
+  {
+    super(PacketType.GetParticipants);
+    /** @type {String[]} */
+    this.Players = [];
   }
 }
 
@@ -384,6 +394,7 @@ export {
   SetChannelSettings,
   GetDefaultSettings,
   SetDefaultSettings,
+  GetParticipants,
   DisconnectParticipant,
   GetParticipantBitmask,
   SetParticipantBitmask,
