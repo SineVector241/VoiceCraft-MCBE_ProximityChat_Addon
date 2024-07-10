@@ -411,6 +411,7 @@ class GUIHandler {
     });
   }
 
+  //I WILL DO THIS LATER!
   /**
    * @description Shows a players bitmask options.
    * @param {Player} player

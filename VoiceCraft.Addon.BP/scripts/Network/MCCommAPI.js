@@ -19,30 +19,87 @@ const PacketType = Object.freeze({
   UnmuteParticipant: 15,
   DeafenParticipant: 16,
   UndeafenParticipant: 17,
-  ChannelMove: 18,
+
+  ANDModParticipantBitmask: 18,
+  ORModParticipantBitmask: 19,
+  XORModParticipantBitmask: 20,
+
+  ChannelMove: 21,
 });
 
-const ParticipantBitmask = Object.freeze({
-  All: 65535, // 1111 1111 1111 1111
-  None: 0, // 0000 0000 0000 0000
-  DeathEnabled: 1, // 0000 0000 0000 0001
-  ProximityEnabled: 2, // 0000 0000 0000 0010
-  WaterEffectEnabled: 4, // 0000 0000 0000 0100
-  EchoEffectEnabled: 8, // 0000 0000 0000 1000
-  DirectionalEnabled: 16, // 0000 0000 0001 0000
-  EnvironmentEnabled: 32, // 0000 0000 0010 0000
+const BitmaskMap = Object.freeze({
+  Bitmask1Settings: 0b00000000000000000000000000001111,
+  Bitmask2Settings: 0b00000000000000000000000011110000,
+  Bitmask3Settings: 0b00000000000000000000111100000000,
+  Bitmask4Settings: 0b00000000000000001111000000000000,
+  Bitmask5Settings: 0b00000000000011110000000000000000,
+  TalkBitmask1: 0b00000000000100000000000000000000,
+  TalkBitmask2: 0b00000000001000000000000000000000,
+  TalkBitmask3: 0b00000000010000000000000000000000,
+  TalkBitmask4: 0b00000000100000000000000000000000,
+  TalkBitmask5: 0b00000001000000000000000000000000,
+  ListenBitmask1: 0b00000010000000000000000000000000,
+  ListenBitmask2: 0b00000100000000000000000000000000,
+  ListenBitmask3: 0b00001000000000000000000000000000,
+  ListenBitmask4: 0b00010000000000000000000000000000,
+  ListenBitmask5: 0b00100000000000000000000000000000,
+  DataBitmask: 0b11000000000000000000000000000000,
+});
 
-  HearingBitmask1: 64, // 0000 0000 0100 0000
-  HearingBitmask2: 128, // 0000 0000 1000 0000
-  HearingBitmask3: 256, // 0000 0001 0000 0000
-  HearingBitmask4: 512, // 0000 0010 0000 0000
-  HearingBitmask5: 1024, // 0000 0100 0000 0000
+const BitmaskMapUtils = Object.freeze({
+  Default: BitmaskMap.TalkBitmask1 | BitmaskMap.ListenBitmask1,
+  AllBitmaskSettings:
+    BitmaskMap.Bitmask1Settings |
+    BitmaskMap.Bitmask2Settings |
+    BitmaskMap.Bitmask3Settings |
+    BitmaskMap.Bitmask4Settings |
+    BitmaskMap.Bitmask5Settings,
+  AllTalkBitmasks:
+    BitmaskMap.TalkBitmask1 |
+    BitmaskMap.TalkBitmask2 |
+    BitmaskMap.TalkBitmask3 |
+    BitmaskMap.TalkBitmask4 |
+    BitmaskMap.TalkBitmask5,
+  AllListenBitmasks:
+    BitmaskMap.ListenBitmask1 |
+    BitmaskMap.ListenBitmask2 |
+    BitmaskMap.ListenBitmask3 |
+    BitmaskMap.ListenBitmask4 |
+    BitmaskMap.ListenBitmask5,
+});
 
-  TalkingBitmask1: 2048, // 0000 1000 0000 0000
-  TalkingBitmask2: 4096, // 0001 0000 0000 0000
-  TalkingBitmask3: 8192, // 0010 0000 0000 0000
-  TalkingBitmask4: 16384, // 0100 0000 0000 0000
-  TalkingBitmask5: 32768, // 1000 0000 0000 0000
+const BitmaskLocations = Object.freeze({
+  Bitmask1Settings: 0, //4 bits
+  Bitmask2Settings: 4, //4 bits
+  Bitmask3Settings: 8, //4 bits
+  Bitmask4Settings: 12, //4 bits
+  Bitmask5Settings: 16, //4 bits
+  TalkBitmask1: 20, //1 bit
+  TalkBitmask2: 21, //1 bit
+  TalkBitmask3: 22, //1 bit
+  TalkBitmask4: 23, //1 bit
+  TalkBitmask5: 24, //1 bit
+  ListenBitmask1: 25, //1 bit
+  ListenBitmask2: 26, //1 bit
+  ListenBitmask3: 27, //1 bit
+  ListenBitmask4: 28, //1 bit
+  ListenBitmask5: 29, //1 bit
+  DataBitmask: 30, //2 bits
+  //32 bits total
+});
+
+const BitmaskSettings = Object.freeze({
+  All: uint.MaxValue, //1111
+  None: 0, //0000
+  ProximityDisabled: 1, //0001
+  DeathDisabled: 2, //0010
+  VoiceEffectsDisabled: 4, //0100
+  EnvironmentDisabled: 8, //1000
+});
+
+const DataBitmask = Object.freeze({
+  Dead: 1,
+  InWater: 2,
 });
 
 class MCCommPacket {
@@ -223,6 +280,36 @@ class UndeafenParticipant extends MCCommPacket {
   }
 }
 
+class ANDModParticipantBitmask extends MCCommPacket {
+  constructor() {
+    super(PacketType.ANDModParticipantBitmask);
+    /** @type {String} */
+    this.PlayerId = "";
+    /** @type {Number} */
+    this.Bitmask = 0;
+  }
+}
+
+class ORModParticipantBitmask extends MCCommPacket {
+  constructor() {
+    super(PacketType.ORModParticipantBitmask);
+    /** @type {String} */
+    this.PlayerId = "";
+    /** @type {Number} */
+    this.Bitmask = 0;
+  }
+}
+
+class XORModParticipantBitmask extends MCCommPacket {
+  constructor() {
+    super(PacketType.XORModParticipantBitmask);
+    /** @type {String} */
+    this.PlayerId = "";
+    /** @type {Number} */
+    this.Bitmask = 0;
+  }
+}
+
 class ChannelMove extends MCCommPacket {
   constructor() {
     super(PacketType.ChannelMove);
@@ -280,7 +367,11 @@ class ChannelOverride {
 
 export {
   PacketType,
-  ParticipantBitmask,
+  BitmaskMap,
+  BitmaskMapUtils,
+  BitmaskLocations,
+  BitmaskSettings,
+  DataBitmask,
   MCCommPacket,
   Login,
   Accept,
@@ -300,6 +391,9 @@ export {
   UnmuteParticipant,
   DeafenParticipant,
   UndeafenParticipant,
+  ANDModParticipantBitmask,
+  ORModParticipantBitmask,
+  XORModParticipantBitmask,
   ChannelMove,
   VoiceCraftPlayer,
   Channel,
