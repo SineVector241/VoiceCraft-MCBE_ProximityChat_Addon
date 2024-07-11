@@ -75,12 +75,11 @@ CommandSystem.RegisterCommand(
   }
 );
 
-/*
 CommandSystem.RegisterCommand(
   "bindfake",
   function (params) {
     params.source.sendMessage("§eBinding fake player...");
-    Network.BindFake(params.Key, params.Name, params.Name)
+    Network.BindFake(params.Name, params.Key)
       .then(() => {
         params.source.sendMessage("§aBinding Successful!");
         if (world.getDynamicProperty("sendBindedMessage"))
@@ -102,8 +101,7 @@ CommandSystem.RegisterCommand(
   "updatefake",
   function (params) {
     params.source.sendMessage("§eUpdating fake player...");
-    var location = params.source.getHeadLocation();
-    Network.UpdateFake(params.Id, location, params.source.dimension.id)
+    Network.UpdateFake(params.Id, params.source)
       .then(() => {
         params.source.sendMessage("§aUpdate Successful!");
       })
@@ -115,7 +113,6 @@ CommandSystem.RegisterCommand(
     Id: "string",
   }
 );
-*/
 
 CommandSystem.RegisterCommand(
   "autoconnect",

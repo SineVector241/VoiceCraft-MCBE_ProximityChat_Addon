@@ -570,6 +570,26 @@ class GUIHandler {
 
         page.show(player).then((result) => {
           if(result.canceled) return;
+
+          res &= ~(BitmaskMap.Bitmask2Settings | BitmaskMap.TalkBitmask2 | BitmaskMap.ListenBitmask2); //Reset all values we want to modify to 0.
+          let settings = BitmaskSettings.None;
+          const [TE, LE, PD, DD, VD, ED] = result.formValues;
+
+          if(TE) res |= BitmaskMap.TalkBitmask2;
+          if(LE) res |= BitmaskMap.ListenBitmask2;
+          if(PD) settings |= BitmaskSettings.ProximityDisabled;
+          if(DD) settings |= BitmaskSettings.DeathDisabled;
+          if(VD) settings |= BitmaskSettings.VoiceEffectsDisabled;
+          if(ED) settings |= BitmaskSettings.EnvironmentDisabled;
+          settings <<= BitmaskLocations.Bitmask2Settings; //Move settings into position.
+          res |= settings; //Set settings.
+
+          this.Network.SetPlayerBitmask(selectedPlayer, res).then(() => {
+            player.sendMessage("§2Successfully set player bitmask2 settings!");
+            })
+            .catch((res) => {
+              player.sendMessage(`§c${res}`);
+            });
         });
       })
       .catch((res) => {
@@ -616,6 +636,26 @@ class GUIHandler {
 
         page.show(player).then((result) => {
           if(result.canceled) return;
+
+          res &= ~(BitmaskMap.Bitmask3Settings | BitmaskMap.TalkBitmask3 | BitmaskMap.ListenBitmask3); //Reset all values we want to modify to 0.
+          let settings = BitmaskSettings.None;
+          const [TE, LE, PD, DD, VD, ED] = result.formValues;
+
+          if(TE) res |= BitmaskMap.TalkBitmask3;
+          if(LE) res |= BitmaskMap.ListenBitmask3;
+          if(PD) settings |= BitmaskSettings.ProximityDisabled;
+          if(DD) settings |= BitmaskSettings.DeathDisabled;
+          if(VD) settings |= BitmaskSettings.VoiceEffectsDisabled;
+          if(ED) settings |= BitmaskSettings.EnvironmentDisabled;
+          settings <<= BitmaskLocations.Bitmask3Settings; //Move settings into position.
+          res |= settings; //Set settings.
+
+          this.Network.SetPlayerBitmask(selectedPlayer, res).then(() => {
+            player.sendMessage("§2Successfully set player bitmask3 settings!");
+            })
+            .catch((res) => {
+              player.sendMessage(`§c${res}`);
+            });
         });
       })
       .catch((res) => {
@@ -662,6 +702,26 @@ class GUIHandler {
 
         page.show(player).then((result) => {
           if(result.canceled) return;
+
+          res &= ~(BitmaskMap.Bitmask4Settings | BitmaskMap.TalkBitmask4 | BitmaskMap.ListenBitmask4); //Reset all values we want to modify to 0.
+          let settings = BitmaskSettings.None;
+          const [TE, LE, PD, DD, VD, ED] = result.formValues;
+
+          if(TE) res |= BitmaskMap.TalkBitmask4;
+          if(LE) res |= BitmaskMap.ListenBitmask4;
+          if(PD) settings |= BitmaskSettings.ProximityDisabled;
+          if(DD) settings |= BitmaskSettings.DeathDisabled;
+          if(VD) settings |= BitmaskSettings.VoiceEffectsDisabled;
+          if(ED) settings |= BitmaskSettings.EnvironmentDisabled;
+          settings <<= BitmaskLocations.Bitmask4Settings; //Move settings into position.
+          res |= settings; //Set settings.
+
+          this.Network.SetPlayerBitmask(selectedPlayer, res).then(() => {
+            player.sendMessage("§2Successfully set player bitmask4 settings!");
+            })
+            .catch((res) => {
+              player.sendMessage(`§c${res}`);
+            });
         });
       })
       .catch((res) => {
@@ -708,6 +768,26 @@ class GUIHandler {
 
         page.show(player).then((result) => {
           if(result.canceled) return;
+
+          res &= ~(BitmaskMap.Bitmask5Settings | BitmaskMap.TalkBitmask5 | BitmaskMap.ListenBitmask5); //Reset all values we want to modify to 0.
+          let settings = BitmaskSettings.None;
+          const [TE, LE, PD, DD, VD, ED] = result.formValues;
+
+          if(TE) res |= BitmaskMap.TalkBitmask5;
+          if(LE) res |= BitmaskMap.ListenBitmask5;
+          if(PD) settings |= BitmaskSettings.ProximityDisabled;
+          if(DD) settings |= BitmaskSettings.DeathDisabled;
+          if(VD) settings |= BitmaskSettings.VoiceEffectsDisabled;
+          if(ED) settings |= BitmaskSettings.EnvironmentDisabled;
+          settings <<= BitmaskLocations.Bitmask5Settings; //Move settings into position.
+          res |= settings; //Set settings.
+
+          this.Network.SetPlayerBitmask(selectedPlayer, res).then(() => {
+            player.sendMessage("§2Successfully set player bitmask5 settings!");
+            })
+            .catch((res) => {
+              player.sendMessage(`§c${res}`);
+            });
         });
       })
       .catch((res) => {
