@@ -194,6 +194,8 @@ class SetChannelSettings extends MCCommPacket {
     this.ProximityToggle = true;
     /** @type {Boolean} */
     this.VoiceEffects = true;
+    /** @type {Boolean} */
+    this.ClearSettings = true;
   }
 }
 
