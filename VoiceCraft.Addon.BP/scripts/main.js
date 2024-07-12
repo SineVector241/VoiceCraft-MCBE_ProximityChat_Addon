@@ -34,6 +34,22 @@ CommandSystem.RegisterCommand(
 );
 
 CommandSystem.RegisterCommand(
+  "disconnect",
+  function (params) {
+    params.source.sendMessage("§eDisconnecting from Server...");
+    if (!Network.IsConnected) {
+      params.source.sendMessage("§cAlready disconnected from server.");
+      return;
+    }
+
+    Network.Disconnect("Disconnection Request.").catch((res) => {
+      params.source.sendMessage(`§c${res}`);
+    });
+  },
+  {}
+);
+
+CommandSystem.RegisterCommand(
   "settings",
   function (params) {
     try {
@@ -83,9 +99,7 @@ CommandSystem.RegisterCommand(
       .then(() => {
         params.source.sendMessage("§aBinding Successful!");
         if (world.getDynamicProperty("sendBindedMessage"))
-          world.sendMessage(
-            `§b${params.Name} §2has connected to VoiceCraft!`
-          );
+          world.sendMessage(`§b${params.Name} §2has connected to VoiceCraft!`);
       })
       .catch((res) => {
         params.source.sendMessage(`§c${res}`);
@@ -130,7 +144,9 @@ CommandSystem.RegisterCommand(
     params.source.sendMessage("§eConnecting/Linking Server...");
     Network.Connect(IP, Port, ServerKey)
       .then(() => {
-        params.source.sendMessage("§aLogin Accepted. Server successfully linked!");
+        params.source.sendMessage(
+          "§aLogin Accepted. Server successfully linked!"
+        );
       })
       .catch((res) => {
         params.source.sendMessage(`§c${res}`);
@@ -177,6 +193,7 @@ CommandSystem.RegisterCommand(
     params.source.sendMessage(
       "§bVoiceCraft Commands\n" +
         "§g- connect [IP: string] [Port: integer] [Key: string] -> §bAttempts connection to a voicecraft server.\n" +
+        "§g- disconnect -> §bDisconnects from the voicecraft server.\n" +
         "§g- settings -> §bGives you an item to access voicecraft settings panel/gui.\n" +
         "§g- bind [Key: string] -> §bBinds the client running the command to a client connected to the voicecraft server.\n" +
         "§g- autoconnect -> §bTakes the settings from the autoconnect settings and attempts connection.\n" +
