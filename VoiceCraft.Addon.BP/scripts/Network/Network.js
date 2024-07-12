@@ -136,70 +136,72 @@ class Network {
     }
   }
 
-    /**
+  /**
    * @description Binds a fake player to a VoiceCraft client.
    * @param {String} id
    * @param {Number} key
    * @returns {Promise<void>}
    */
-    async BindFake(id, key) {
-      if (!this.IsConnected) throw "Could not fake bind, Server not connected/linked!";
-  
-      const packet = new Bind();
-      packet.Gamertag = id;
-      packet.PlayerKey = key;
-      packet.PlayerId = id;
-      packet.Token = this.Token;
-  
-      try {
-        const response = await this.SendPacket(packet);
-        if (response.PacketId == PacketType.Accept) {
-          return;
-        } else {
-          /** @type {Deny} */
-          const packetData = response;
-          throw `Binding Unsuccessful, Reason: ${packetData.Reason}`;
-        }
-      } catch (ex) {
-        throw `Binding Unsuccessful, ERROR: ${ex}`;
-      }
-    }
+  async BindFake(id, key) {
+    if (!this.IsConnected)
+      throw "Could not fake bind, Server not connected/linked!";
 
-        /**
+    const packet = new Bind();
+    packet.Gamertag = id;
+    packet.PlayerKey = key;
+    packet.PlayerId = id;
+    packet.Token = this.Token;
+
+    try {
+      const response = await this.SendPacket(packet);
+      if (response.PacketId == PacketType.Accept) {
+        return;
+      } else {
+        /** @type {Deny} */
+        const packetData = response;
+        throw `Binding Unsuccessful, Reason: ${packetData.Reason}`;
+      }
+    } catch (ex) {
+      throw `Binding Unsuccessful, ERROR: ${ex}`;
+    }
+  }
+
+  /**
    * @description Updates a fake player.
    * @param {String} id
    * @param {Player} player
    * @returns {Promise<void>}
    */
-        async UpdateFake(id, player) {
-          if (!this.IsConnected) throw "Could not update fake player, Server not connected/linked!";
-      
-          const packet = new Update();
-          const fakePlayer = new VoiceCraftPlayer();
-          fakePlayer.PlayerId = id;
-          fakePlayer.CaveDensity = this.NetworkRunner.GetCaveDensity(player);
-          fakePlayer.DimensionId = player.dimension.id;
-          fakePlayer.InWater = player.isInWater;
-          fakePlayer.Location = player.location;
-          fakePlayer.Rotation = player.getRotation().y;
+  async UpdateFake(id, player) {
+    if (!this.IsConnected)
+      throw "Could not update fake player, Server not connected/linked!";
 
-          packet.Players = [fakePlayer];
-          packet.Token = this.Token;
-          console.log(JSON.stringify(packet));
-      
-          try {
-            const response = await this.SendPacket(packet);
-            if (response.PacketId == PacketType.AckUpdate) {
-              return;
-            } else {
-              /** @type {Deny} */
-              const packetData = response;
-              throw `Could not update fake player, Reason: ${packetData.Reason}`;
-            }
-          } catch (ex) {
-            throw `Could not update fake player, ERROR: ${ex}`;
-          }
-        }
+    const packet = new Update();
+    const fakePlayer = new VoiceCraftPlayer();
+    fakePlayer.PlayerId = id;
+    fakePlayer.CaveDensity = this.NetworkRunner.GetCaveDensity(player);
+    fakePlayer.DimensionId = player.dimension.id;
+    fakePlayer.InWater = player.isInWater;
+    fakePlayer.Location = player.location;
+    fakePlayer.Rotation = player.getRotation().y;
+
+    packet.Players = [fakePlayer];
+    packet.Token = this.Token;
+    console.log(JSON.stringify(packet));
+
+    try {
+      const response = await this.SendPacket(packet);
+      if (response.PacketId == PacketType.AckUpdate) {
+        return;
+      } else {
+        /** @type {Deny} */
+        const packetData = response;
+        throw `Could not update fake player, Reason: ${packetData.Reason}`;
+      }
+    } catch (ex) {
+      throw `Could not update fake player, ERROR: ${ex}`;
+    }
+  }
 
   /**
    * @description Gets all the available channels from the VoiceCraft server
@@ -268,13 +270,15 @@ class Network {
    * @param {Number} proximityDistance
    * @param {Boolean} proximityToggle
    * @param {Boolean} voiceEffects
+   * @param {Boolean} clearSettings
    * @returns {Promise<void>}
    */
   async SetChannelSettings(
     channelId,
     proximityDistance,
     proximityToggle,
-    voiceEffects
+    voiceEffects,
+    clearSettings
   ) {
     if (!this.IsConnected)
       throw "Could not set channel settings, Server not connected/linked!";
@@ -284,6 +288,7 @@ class Network {
     packet.ProximityDistance = proximityDistance;
     packet.ProximityToggle = proximityToggle;
     packet.VoiceEffects = voiceEffects;
+    packet.ClearSettings = clearSettings;
     packet.Token = this.Token;
 
     try {
