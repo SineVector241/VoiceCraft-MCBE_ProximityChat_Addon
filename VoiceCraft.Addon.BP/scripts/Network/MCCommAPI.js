@@ -1,31 +1,32 @@
 const PacketType = Object.freeze({
   Login: 0,
-  Accept: 1,
-  Deny: 2,
-  Bind: 3,
-  Update: 4,
-  AckUpdate: 5,
-  GetChannels: 6,
-  GetChannelSettings: 7,
-  SetChannelSettings: 8,
-  GetDefaultSettings: 9,
-  SetDefaultSettings: 10,
+  Logout: 1,
+  Accept: 2,
+  Deny: 3,
+  Bind: 4,
+  Update: 5,
+  AckUpdate: 6,
+  GetChannels: 7,
+  GetChannelSettings: 8,
+  SetChannelSettings: 9,
+  GetDefaultSettings: 10,
+  SetDefaultSettings: 11,
 
   //Participant Stuff
-  GetParticipants: 11,
-  DisconnectParticipant: 12,
-  GetParticipantBitmask: 13,
-  SetParticipantBitmask: 14,
-  MuteParticipant: 15,
-  UnmuteParticipant: 16,
-  DeafenParticipant: 17,
-  UndeafenParticipant: 18,
+  GetParticipants: 12,
+  DisconnectParticipant: 13,
+  GetParticipantBitmask: 14,
+  SetParticipantBitmask: 15,
+  MuteParticipant: 16,
+  UnmuteParticipant: 17,
+  DeafenParticipant: 18,
+  UndeafenParticipant: 19,
 
-  ANDModParticipantBitmask: 19,
-  ORModParticipantBitmask: 20,
-  XORModParticipantBitmask: 21,
+  ANDModParticipantBitmask: 20,
+  ORModParticipantBitmask: 21,
+  XORModParticipantBitmask: 22,
 
-  ChannelMove: 22,
+  ChannelMove: 23,
 });
 
 const BitmaskMap = Object.freeze({
@@ -116,6 +117,12 @@ class Login extends MCCommPacket {
     super(PacketType.Login);
     /** @type {String} */
     this.LoginKey = "";
+  }
+}
+
+class Logout extends MCCommPacket {
+  constructor() {
+    super(PacketType.Logout);
   }
 }
 
@@ -386,6 +393,7 @@ export {
   DataBitmask,
   MCCommPacket,
   Login,
+  Logout,
   Accept,
   Deny,
   Bind,

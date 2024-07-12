@@ -8,6 +8,7 @@ import {
   PacketType,
   MCCommPacket,
   Login,
+  Logout,
   Accept,
   Deny,
   Bind,
@@ -95,6 +96,11 @@ class Network {
   async Disconnect(reason = "N.A.") {
     if (this.IsConnected) {
       this.NetworkRunner.Stop();
+
+      const packet = new Logout();
+      packet.Token = this.Token;
+
+      this.SendPacket(packet);
       this.IsConnected = false;
       if (world.getDynamicProperty("broadcastVoipDisconnection"))
         world.sendMessage(`§cDisconnected from VOIP Server, Reason: ${reason}`);
