@@ -15,6 +15,8 @@ class NetworkRunner {
     this.DeadPlayers = [];
     /** @type {Number} */
     this.UpdateLoop = 0;
+    /** @type {Number} */
+    this.ReconnectRetries = 0;
 
     /** @type {String[]} */
     this.CaveBlocks = [
@@ -146,16 +148,56 @@ class NetworkRunner {
         }
       } catch (ex) {
         if (!this.Network.IsConnected) return; //do nothing.
+
         console.warn("Lost Connection From VOIP Server."); //EZ
         this.Network.IsConnected = false;
+
         http.cancelAll("Lost Connection From VOIP Server.");
-        if (world.getDynamicProperty("broadcastVoipDisconnection"))
-          world.sendMessage("§cLost Connection From VOIP Server.");
         system.clearRun(this.UpdateLoop);
         this.UpdateLoop = 0;
+
+        if(world.getDynamicProperty("autoReconnect"))
+        {
+          if (world.getDynamicProperty("broadcastVoipDisconnection"))
+            world.sendMessage("§cLost Connection From VOIP Server. Attempting Reconnection...");
+
+          this.ReconnectRetries = 0;
+          this.Reconnect();
+          return;
+        }
+
+        if (world.getDynamicProperty("broadcastVoipDisconnection"))
+          world.sendMessage("§cLost Connection From VOIP Server.");
       }
     } else if (this.UpdateLoop != 0) {
       this.Stop();
+    }
+  }
+
+  Reconnect()
+  {
+    if(this.ReconnectRetries < 5)
+    {
+      this.ReconnectRetries++;
+
+      console.warn(`Reconnecting to server... Attempt: ${this.ReconnectRetries}`);
+      this.Network.Connect(this.Network.IPAddress, this.Network.Port, this.Network.Key).then(() => {
+        console.warn("Successfully reconnected to VOIP server.");
+
+        if (world.getDynamicProperty("broadcastVoipDisconnection"))
+          world.sendMessage("§aSuccessfully reconnected to VOIP server.");
+      }).catch(() => {
+        if(this.ReconnectRetries < 5)
+        {
+          console.warn("Connection failed, Retrying...");
+          this.Reconnect();
+          return;
+        }
+        console.error("Failed to reconnect to VOIP server.");
+
+        if (world.getDynamicProperty("broadcastVoipDisconnection"))
+          world.sendMessage("§cFailed to reconnect to VOIP server...");
+      });
     }
   }
 }

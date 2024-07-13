@@ -204,14 +204,19 @@ class GUIHandler {
         "Broadcast VOIP Disconnection",
         world.getDynamicProperty("broadcastVoipDisconnection")
       )
+      .toggle(
+        "Auto Reconnect",
+        world.getDynamicProperty("autoReconnect")
+      )
       .show(player)
       .then((results) => {
         if (results.canceled) return;
 
-        const [BB, BVD] = results.formValues;
+        const [BB, BVD, AR] = results.formValues;
 
         world.setDynamicProperty("sendBindedMessage", BB);
         world.setDynamicProperty("broadcastVoipDisconnection", BVD);
+        world.setDynamicProperty("autoReconnect", AR);
 
         player.sendMessage("§2Successfully set internal server settings!");
       });
