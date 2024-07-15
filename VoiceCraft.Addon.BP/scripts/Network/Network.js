@@ -49,6 +49,48 @@ class Network {
     this.IsConnected = false;
     /** @type {NetworkRunner} */
     this.NetworkRunner = new NetworkRunner(this);
+
+    world.afterEvents.entityDie.subscribe((ev) => {
+      if (ev.deadEntity.typeId == "minecraft:player") {
+        this.NetworkRunner.DeadPlayers.push(ev.deadEntity.id);
+      }
+    });
+    
+    world.afterEvents.playerSpawn.subscribe((ev) => {
+      if (ev.initialSpawn && this.IsConnected) {
+        const player = ev.player;
+        const key = ev.player.getDynamicProperty("VCAutoBind");
+        if (key != null) {
+          player.sendMessage(`§2Autobinding Enabled. §eBinding to key: ${key}`);
+          this.BindPlayer(key, player)
+            .then(() => {
+              player.sendMessage("§aBinding Successful!");
+            })
+            .catch((res) => {
+              player.sendMessage(`§c${res}`);
+            });
+        }
+      }
+    
+      for (let i = 0; i < this.NetworkRunner.DeadPlayers.length; i++) {
+        if (this.NetworkRunner.DeadPlayers[i] == ev.player.id) {
+          this.NetworkRunner.DeadPlayers.splice(i, 1);
+        }
+      }
+    });
+    
+    world.afterEvents.worldInitialize.subscribe((ev) => {
+      if(world.getDynamicProperty("autoConnectOnStart"))
+      {
+        console.warn("Auto connection enabled, Connecting to server...");
+        this.AutoConnect().then(() => {
+          console.warn("Successfully auto connected to VOIP server.");
+        })
+        .catch((res) => {
+          console.error("Failed to auto connect to VOIP server.");
+        })
+      }
+    });
   }
 
   /**
@@ -86,6 +128,22 @@ class Network {
     } catch (ex) {
       throw `Could not contact server. Please check if your IPAddress and Port are correct! ERROR: ${ex}`;
     }
+  }
+
+  /**
+   * @description Connects to the VoiceCraft server using auto connect settings.
+   */
+  async AutoConnect()
+  {
+    const IP = world.getDynamicProperty("autoConnectIP");
+    const Port = world.getDynamicProperty("autoConnectPort");
+    const ServerKey = world.getDynamicProperty("autoConnectServerKey");
+
+    if (IsNullOrWhitespace(IP) || IsNullOrWhitespace(ServerKey) || Port === undefined) {
+      throw "Error: Cannot connect. AutoConnect settings may not be setup properly!";
+    }
+
+    await this.Connect(IP, Port, ServerKey);
   }
 
   /**
@@ -181,7 +239,7 @@ class Network {
     fakePlayer.PlayerId = id;
     fakePlayer.CaveDensity = this.NetworkRunner.GetCaveDensity(player);
     fakePlayer.DimensionId = player.dimension.id;
-    fakePlayer.InWater = player.isInWater;
+    fakePlayer.Muffled = player.isInWater;
     fakePlayer.Location = player.location;
     fakePlayer.Rotation = player.getRotation().y;
 
@@ -463,7 +521,7 @@ class Network {
 
     const packet = new SetParticipantBitmask();
     packet.PlayerId = player.id;
-    packet.Bitmask = bitmask;
+    packet.Bitmask = new Uint32Array([bitmask])[0]; //I fucking hate JS.
     packet.Token = this.Token;
 
     try {
@@ -600,7 +658,7 @@ class Network {
 
     const packet = new ANDModParticipantBitmask();
     packet.PlayerId = player.id;
-    packet.Bitmask = bitmask;
+    packet.Bitmask = new Uint32Array([bitmask])[0]; //I fucking hate JS.
     packet.Token = this.Token;
 
     try {
@@ -623,13 +681,13 @@ class Network {
    * @param {Number} bitmask
    * @returns {Promise<void>}
    */
-  async ORModPlayerBitmask(player) {
+  async ORModPlayerBitmask(player, bitmask) {
     if (!this.IsConnected)
       throw "Could not OR mod player bitmask, Server not connected/linked!";
 
     const packet = new ORModParticipantBitmask();
     packet.PlayerId = player.id;
-    packet.Bitmask = bitmask;
+    packet.Bitmask = new Uint32Array([bitmask])[0]; //I fucking hate JS.
     packet.Token = this.Token;
 
     try {
@@ -652,13 +710,13 @@ class Network {
    * @param {Number} bitmask
    * @returns {Promise<void>}
    */
-  async XORModPlayerBitmask(player) {
+  async XORModPlayerBitmask(player, bitmask) {
     if (!this.IsConnected)
       throw "Could not XOR mod player bitmask, Server not connected/linked!";
 
     const packet = new XORModParticipantBitmask();
     packet.PlayerId = player.id;
-    packet.Bitmask = bitmask;
+    packet.Bitmask = new Uint32Array([bitmask])[0]; //I fucking hate JS.
     packet.Token = this.Token;
 
     try {
@@ -722,4 +780,17 @@ class Network {
     }
   }
 }
+
+/**
+ * @description Checks if the string input is null or whitespace.
+ * @param {String} input 
+ * @returns 
+ */
+function IsNullOrWhitespace( input ) {
+
+  if (typeof input === 'undefined' || input == null) return true;
+
+  return input.replace(/\s/g, '').length < 1;
+}
+
 export { Network };

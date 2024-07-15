@@ -90,22 +90,8 @@ class GUIHandler {
           break;
 
         case 3:
-          const IP = world.getDynamicProperty("autoConnectIP");
-          const Port = world.getDynamicProperty("autoConnectPort");
-          const ServerKey = world.getDynamicProperty("autoConnectServerKey");
-          if (
-            isEmptyOrSpaces(IP) ||
-            isEmptyOrSpaces(ServerKey) ||
-            Port === null
-          ) {
-            player.sendMessage(
-              "§cError. Cannot connect. AutoConnect settings may not be setup properly!"
-            );
-            return;
-          }
-
           player.sendMessage("§eConnecting/Linking Server...");
-          this.Network.Connect(IP, Port, ServerKey)
+          this.Network.AutoConnect()
             .then(() => {
               player.sendMessage(
                 "§aLogin Accepted. Server successfully linked!"
@@ -208,15 +194,20 @@ class GUIHandler {
         "Auto Reconnect",
         world.getDynamicProperty("autoReconnect")
       )
+      .toggle(
+        "AutoConnect On Start",
+        world.getDynamicProperty("autoConnectOnStart")
+      )
       .show(player)
       .then((results) => {
         if (results.canceled) return;
 
-        const [BB, BVD, AR] = results.formValues;
+        const [BB, BVD, AR, AOS] = results.formValues;
 
         world.setDynamicProperty("sendBindedMessage", BB);
         world.setDynamicProperty("broadcastVoipDisconnection", BVD);
         world.setDynamicProperty("autoReconnect", AR);
+        world.setDynamicProperty("autoConnectOnStart", AOS);
 
         player.sendMessage("§2Successfully set internal server settings!");
       });

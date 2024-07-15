@@ -101,7 +101,7 @@ const BitmaskSettings = Object.freeze({
 
 const DataBitmask = Object.freeze({
   Dead: 1,
-  InWater: 2,
+  Muffled: 2,
 });
 
 class MCCommPacket {
@@ -350,11 +350,11 @@ class VoiceCraftPlayer {
     /** @type {Number} */
     this.Rotation = 0.0;
     /** @type {Number} */
-    this.CaveDensity = 0.0;
+    this.EchoFactor = 0.0;
+    /** @type {Boolean} */
+    this.Muffled = false;
     /** @type {Boolean} */
     this.IsDead = false;
-    /** @type {Boolean} */
-    this.InWater = false;
   }
 }
 

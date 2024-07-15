@@ -131,18 +131,8 @@ CommandSystem.RegisterCommand(
 CommandSystem.RegisterCommand(
   "autoconnect",
   function (params) {
-    const IP = world.getDynamicProperty("autoConnectIP");
-    const Port = world.getDynamicProperty("autoConnectPort");
-    const ServerKey = world.getDynamicProperty("autoConnectServerKey");
-    if (isEmptyOrSpaces(IP) || isEmptyOrSpaces(ServerKey) || Port === null) {
-      params.source.sendMessage(
-        "§cError. Cannot connect. AutoConnect settings may not be setup properly!"
-      );
-      return;
-    }
-
     params.source.sendMessage("§eConnecting/Linking Server...");
-    Network.Connect(IP, Port, ServerKey)
+    Network.AutoConnect()
       .then(() => {
         params.source.sendMessage(
           "§aLogin Accepted. Server successfully linked!"
@@ -218,36 +208,3 @@ world.beforeEvents.itemUse.subscribe((ev) => {
     }
   });
 });
-
-world.afterEvents.entityDie.subscribe((ev) => {
-  if (ev.deadEntity.typeId == "minecraft:player") {
-    Network.NetworkRunner.DeadPlayers.push(ev.deadEntity.id);
-  }
-});
-
-world.afterEvents.playerSpawn.subscribe((ev) => {
-  if (ev.initialSpawn && Network.IsConnected) {
-    const player = ev.player;
-    const key = ev.player.getDynamicProperty("VCAutoBind");
-    if (key != null) {
-      player.sendMessage(`§2Autobinding Enabled. §eBinding to key: ${key}`);
-      Network.BindPlayer(key, player)
-        .then(() => {
-          player.sendMessage("§aBinding Successful!");
-        })
-        .catch((res) => {
-          player.sendMessage(`§c${res}`);
-        });
-    }
-  }
-
-  for (let i = 0; i < Network.NetworkRunner.DeadPlayers.length; i++) {
-    if (Network.NetworkRunner.DeadPlayers[i] == ev.player.id) {
-      Network.NetworkRunner.DeadPlayers.splice(i, 1);
-    }
-  }
-});
-
-function isEmptyOrSpaces(str) {
-  return str === null || str.match(/^ *$/) !== null;
-}

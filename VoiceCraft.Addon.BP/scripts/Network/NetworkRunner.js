@@ -2,7 +2,13 @@ import { world, system, Player } from "@minecraft/server";
 import { http } from "@minecraft/server-net";
 import { Network } from "./Network";
 import { Vec3 } from "../Utils/vec3";
-import { Deny, PacketType, Update, AckUpdate, VoiceCraftPlayer } from "./MCCommAPI";
+import {
+  Deny,
+  PacketType,
+  Update,
+  AckUpdate,
+  VoiceCraftPlayer,
+} from "./MCCommAPI";
 
 class NetworkRunner {
   /**
@@ -40,9 +46,9 @@ class NetworkRunner {
    */
   Stop() {
     if (this.UpdateLoop != 0) {
-        system.clearRun(this.UpdateLoop); //clear the loop!
-        this.UpdateLoop = 0;
-      }
+      system.clearRun(this.UpdateLoop); //clear the loop!
+      this.UpdateLoop = 0;
+    }
   }
 
   /**
@@ -56,7 +62,7 @@ class NetworkRunner {
     const dimension = world.getDimension("overworld");
     const headLocation = player.getHeadLocation();
     try {
-      const total = this.CaveBlocks.includes(
+      let total = this.CaveBlocks.includes(
         dimension.getBlockFromRay(headLocation, Vec3.up, {
           maxDistance: 50,
         })?.block.type.id
@@ -99,7 +105,7 @@ class NetworkRunner {
         ? 1
         : 0;
       return total / 6;
-    } catch {
+    } catch(ex) {
       return 0.0;
     }
   }
@@ -118,11 +124,11 @@ class NetworkRunner {
           player.DimensionId = plr.dimension.id;
           player.Location = plr.getHeadLocation();
           player.Rotation = plr.getRotation().y;
-          player.CaveDensity = this.GetCaveDensity(plr);
-          player.IsDead = this.DeadPlayers.includes(plr.id);
-          player.InWater = plr.dimension.getBlock(
+          player.EchoFactor = this.GetCaveDensity(plr);
+          player.Muffled = plr.dimension.getBlock(
             plr.getHeadLocation()
           )?.isLiquid;
+          player.IsDead = this.DeadPlayers.includes(plr.id);
           return player;
         });
 
@@ -156,10 +162,11 @@ class NetworkRunner {
         system.clearRun(this.UpdateLoop);
         this.UpdateLoop = 0;
 
-        if(world.getDynamicProperty("autoReconnect"))
-        {
+        if (world.getDynamicProperty("autoReconnect")) {
           if (world.getDynamicProperty("broadcastVoipDisconnection"))
-            world.sendMessage("§cLost Connection From VOIP Server. Attempting Reconnection...");
+            world.sendMessage(
+              "§cLost Connection From VOIP Server. Attempting Reconnection..."
+            );
 
           this.ReconnectRetries = 0;
           this.Reconnect();
@@ -174,30 +181,35 @@ class NetworkRunner {
     }
   }
 
-  Reconnect()
-  {
-    if(this.ReconnectRetries < 5)
-    {
+  Reconnect() {
+    if (this.ReconnectRetries < 5) {
       this.ReconnectRetries++;
 
-      console.warn(`Reconnecting to server... Attempt: ${this.ReconnectRetries}`);
-      this.Network.Connect(this.Network.IPAddress, this.Network.Port, this.Network.Key).then(() => {
-        console.warn("Successfully reconnected to VOIP server.");
+      console.warn(
+        `Reconnecting to server... Attempt: ${this.ReconnectRetries}`
+      );
+      this.Network.Connect(
+        this.Network.IPAddress,
+        this.Network.Port,
+        this.Network.Key
+      )
+        .then(() => {
+          console.warn("Successfully reconnected to VOIP server.");
 
-        if (world.getDynamicProperty("broadcastVoipDisconnection"))
-          world.sendMessage("§aSuccessfully reconnected to VOIP server.");
-      }).catch(() => {
-        if(this.ReconnectRetries < 5)
-        {
-          console.warn("Connection failed, Retrying...");
-          this.Reconnect();
-          return;
-        }
-        console.error("Failed to reconnect to VOIP server.");
+          if (world.getDynamicProperty("broadcastVoipDisconnection"))
+            world.sendMessage("§aSuccessfully reconnected to VOIP server.");
+        })
+        .catch(() => {
+          if (this.ReconnectRetries < 5) {
+            console.warn("Connection failed, Retrying...");
+            this.Reconnect();
+            return;
+          }
+          console.error("Failed to reconnect to VOIP server.");
 
-        if (world.getDynamicProperty("broadcastVoipDisconnection"))
-          world.sendMessage("§cFailed to reconnect to VOIP server...");
-      });
+          if (world.getDynamicProperty("broadcastVoipDisconnection"))
+            world.sendMessage("§cFailed to reconnect to VOIP server...");
+        });
     }
   }
 }
