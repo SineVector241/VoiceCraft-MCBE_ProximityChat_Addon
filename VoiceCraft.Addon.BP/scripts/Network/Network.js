@@ -245,7 +245,6 @@ class Network {
 
     packet.Players = [fakePlayer];
     packet.Token = this.Token;
-    console.log(JSON.stringify(packet));
 
     try {
       const response = await this.SendPacket(packet);
