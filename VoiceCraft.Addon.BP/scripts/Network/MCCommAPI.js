@@ -117,6 +117,8 @@ class Login extends MCCommPacket {
     super(PacketType.Login);
     /** @type {String} */
     this.LoginKey = "";
+    /** @type {String} */
+    this.Version = "";
   }
 }
 
@@ -262,6 +264,8 @@ class SetParticipantBitmask extends MCCommPacket {
     super(PacketType.SetParticipantBitmask);
     /** @type {String} */
     this.PlayerId = "";
+    /** @type {Boolean} */
+    this.IgnoreDataBitmask = false;
     /** @type {Number} */
     this.Bitmask = 0;
   }

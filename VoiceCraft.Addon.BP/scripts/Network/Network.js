@@ -38,6 +38,8 @@ import { NetworkRunner } from "./NetworkRunner";
 import { world, Player } from "@minecraft/server";
 
 class Network {
+  static Version = "1.0.0";
+
   constructor() {
     /** @type {String} */
     this.IPAddress = "";
@@ -55,7 +57,7 @@ class Network {
         this.NetworkRunner.DeadPlayers.push(ev.deadEntity.id);
       }
     });
-    
+
     world.afterEvents.playerSpawn.subscribe((ev) => {
       if (ev.initialSpawn && this.IsConnected) {
         const player = ev.player;
@@ -71,24 +73,24 @@ class Network {
             });
         }
       }
-    
+
       for (let i = 0; i < this.NetworkRunner.DeadPlayers.length; i++) {
         if (this.NetworkRunner.DeadPlayers[i] == ev.player.id) {
           this.NetworkRunner.DeadPlayers.splice(i, 1);
         }
       }
     });
-    
+
     world.afterEvents.worldInitialize.subscribe((ev) => {
-      if(world.getDynamicProperty("autoConnectOnStart"))
-      {
+      if (world.getDynamicProperty("autoConnectOnStart")) {
         console.warn("Auto connection enabled, Connecting to server...");
-        this.AutoConnect().then(() => {
-          console.warn("Successfully auto connected to VOIP server.");
-        })
-        .catch((res) => {
-          console.error("Failed to auto connect to VOIP server.");
-        })
+        this.AutoConnect()
+          .then(() => {
+            console.warn("Successfully auto connected to VOIP server.");
+          })
+          .catch((res) => {
+            console.error("Failed to auto connect to VOIP server.");
+          });
       }
     });
   }
@@ -110,36 +112,43 @@ class Network {
 
     const packet = new Login();
     packet.LoginKey = key;
+    packet.Version = Network.Version;
 
+    /** @type {MCCommPacket} */
+    let response = null;
     try {
-      const response = await this.SendPacket(packet);
-      if (response.PacketId == PacketType.Accept) {
-        /** @type {Accept} */
-        const packetData = response;
-        this.IsConnected = true;
-        this.Token = packetData.Token;
-        this.NetworkRunner.Start();
-        return;
-      } else {
-        /** @type {Deny} */
-        const packetData = response;
-        throw `Login Denied. Server denied link request! Reason: ${packetData.Reason}`;
-      }
+      response = await this.SendPacket(packet);
     } catch (ex) {
       throw `Could not contact server. Please check if your IPAddress and Port are correct! ERROR: ${ex}`;
+    }
+
+    if (response.PacketId == PacketType.Accept) {
+      /** @type {Accept} */
+      const packetData = response;
+      this.IsConnected = true;
+      this.Token = packetData.Token;
+      this.NetworkRunner.Start();
+      return;
+    } else {
+      /** @type {Deny} */
+      const packetData = response;
+      throw `Login Denied. Server denied link request! Reason: ${packetData.Reason}`;
     }
   }
 
   /**
    * @description Connects to the VoiceCraft server using auto connect settings.
    */
-  async AutoConnect()
-  {
+  async AutoConnect() {
     const IP = world.getDynamicProperty("autoConnectIP");
     const Port = world.getDynamicProperty("autoConnectPort");
     const ServerKey = world.getDynamicProperty("autoConnectServerKey");
 
-    if (IsNullOrWhitespace(IP) || IsNullOrWhitespace(ServerKey) || Port === undefined) {
+    if (
+      IsNullOrWhitespace(IP) ||
+      IsNullOrWhitespace(ServerKey) ||
+      Port === undefined
+    ) {
       throw "Error: Cannot connect. AutoConnect settings may not be setup properly!";
     }
 
@@ -512,14 +521,16 @@ class Network {
    * @description Set's a player's VoiceCraft client bitmask.
    * @param {Player} player
    * @param {Number} bitmask
+   * @param {Boolean} ignoreDataBitmask
    * @returns {Promise<void>}
    */
-  async SetPlayerBitmask(player, bitmask) {
+  async SetPlayerBitmask(player, bitmask, ignoreDataBitmask) {
     if (!this.IsConnected)
       throw "Could not set player bitmask, Server not connected/linked!";
 
     const packet = new SetParticipantBitmask();
     packet.PlayerId = player.id;
+    packet.IgnoreDataBitmask = ignoreDataBitmask;
     packet.Bitmask = new Uint32Array([bitmask])[0]; //I fucking hate JS.
     packet.Token = this.Token;
 
@@ -782,14 +793,13 @@ class Network {
 
 /**
  * @description Checks if the string input is null or whitespace.
- * @param {String} input 
- * @returns 
+ * @param {String} input
+ * @returns
  */
-function IsNullOrWhitespace( input ) {
+function IsNullOrWhitespace(input) {
+  if (typeof input === "undefined" || input == null) return true;
 
-  if (typeof input === 'undefined' || input == null) return true;
-
-  return input.replace(/\s/g, '').length < 1;
+  return input.replace(/\s/g, "").length < 1;
 }
 
 export { Network };

@@ -10,14 +10,14 @@
 		"description": "pack.description",
 		"min_engine_version": [
 			1,
-			19,
-			50
+			21,
+			20
 		],
 		"uuid": "87b49038-e613-4216-b265-6101b83376e2",
 		"version": [
 			1,
 			0,
-			6
+			7
 		]
 	},
 	"modules": [
@@ -45,7 +45,7 @@
 	"dependencies": [
 		{
 			"module_name": "@minecraft/server",
-			"version": "1.12.0-beta"
+			"version": "1.14.0-beta"
 		},
 		{
 			"module_name": "@minecraft/server-net",
